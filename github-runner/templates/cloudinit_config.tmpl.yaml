@@ -1,0 +1,176 @@
+write_files:
+  - path: '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/github-runner-logs.json'
+    owner: 'root:root'
+    permissions: '0444'
+    encoding: 'b64'
+    content: '${base64encode(CLOUDWATCH_AGENT_CONFIG)}'
+
+  - path: '/usr/bin/github-registration.sh'
+    owner: 'root:root'
+    permissions: '0555'
+    content: |
+      #!/usr/bin/env bash
+      set -ex
+
+      # Connect (and automatically re-connect) to ECR Registry
+      aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}
+      echo -e "\naws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}" >> /etc/profile
+      echo "1 */6 * * * aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID} >/dev/null 2>&1" | tee -a mycron
+      crontab mycron
+
+      # Get the runner EC2 Instance Id
+      metadata_token=`curl --silent -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+      INSTANCE_ID="$(curl --silent -H "X-aws-ec2-metadata-token: $${metadata_token}" -v http://169.254.169.254/latest/meta-data/instance-id)"
+
+      # Get the data required in order to register the runner
+      PERSONAL_ACCESS_TOKEN=$(aws --region ${REGION} ssm get-parameter --name ${PAT_PATH} --with-decryption --query 'Parameter.Value' --output text)
+      GITHUB_SERVER_URL=${GITHUB_ORG_URL}/${GITHUB_REPO_NAME}
+      GITHUB_API_URL=$(echo "$${GITHUB_SERVER_URL}" | sed -E 's/github\.com\//api\.github\.com\/repos\//')
+      RUNNER_REGISTRATION_TOKEN=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $${PERSONAL_ACCESS_TOKEN}" "$${GITHUB_API_URL}/actions/runners/registration-token")
+      RUNNER_REGISTRATION_TOKEN_VALUE=$(echo $RUNNER_REGISTRATION_TOKEN | jq -rc .token)
+
+      cd /opt/actions-runner
+
+      # Add all required runner agent instances (based on required concurrency)
+      for RUNNER_ID in $(seq ${CONCURRENT}); do
+
+        # Determine this runner's name
+        SERVICE_NAME="runner$${RUNNER_ID}"
+
+        # Create the runner's user
+        useradd -b /opt/actions-runner -m $${SERVICE_NAME}
+        usermod -aG docker $${SERVICE_NAME}
+        usermod -s /bin/bash $${SERVICE_NAME}
+
+        # Automatically re-connect to the CaaS ECR Registry
+        runuser -l $${SERVICE_NAME} -c "echo -e \"aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}\" >> .bashrc"
+
+        # Unzip the runner binary
+        runuser -l $${SERVICE_NAME} -c 'tar xzf /opt/actions-runner-linux-x64-latest.tar.gz --directory=.'
+
+        # Register the runner & start the systemd service
+        cd $${SERVICE_NAME}
+          echo "Configuring service at $(pwd)"
+          runuser -l $${SERVICE_NAME} -c "./config.sh --unattended --name \"$${INSTANCE_ID}-$${SERVICE_NAME}\" --url \"$${GITHUB_SERVER_URL}\" --token \"$${RUNNER_REGISTRATION_TOKEN_VALUE}\" --labels \"${TAG_LIST}\" --replace --pat \"$${PERSONAL_ACCESS_TOKEN}\" --disableupdate"
+          ./svc.sh install $${SERVICE_NAME}
+          ./svc.sh start $${SERVICE_NAME}
+          ./svc.sh status $${SERVICE_NAME}
+
+          # Set up systemd options to unregister the runner at shutdown
+          if [ -f /opt/actions-runner/$${SERVICE_NAME}/.service ]; then
+            RUNNER_SERVICE_NAME="/etc/systemd/system/$(cat /opt/actions-runner/$${SERVICE_NAME}/.service)"
+            if [ -f $${RUNNER_SERVICE_NAME} ]; then
+              exec_stop="ExecStop=/usr/bin/env bash /usr/bin/github-deregistration.sh $${SERVICE_NAME}\nKillSignal=SIGQUIT\nTimeoutStopSec=3600\n"
+              sed -i "/^ExecStart=.*/a $${exec_stop}" $${RUNNER_SERVICE_NAME}
+              systemctl daemon-reload
+            else
+              echo "Service couldn't be found ($${RUNNER_SERVICE_NAME})"
+            fi
+          else
+            echo "Service wasn't successfully started, so systemd ExecStop has not been added!"
+          fi
+
+          # Set up cron to automatically reconnect to ECR every 6 hours
+          runuser -l $${SERVICE_NAME} -c "echo \"1 */6 * * * aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID} >/dev/null 2>&1\" | tee -a mycron"
+          runuser -l $${SERVICE_NAME} -c "crontab mycron"
+        cd ..
+      done
+
+  - path: '/usr/bin/github-deregistration.sh'
+    owner: 'root:root'
+    permissions: '0555'
+    content: |
+      cd /opt/actions-runner
+
+      PERSONAL_ACCESS_TOKEN=$(aws --region ${REGION} ssm get-parameter --name ${PAT_PATH} --with-decryption --query 'Parameter.Value' --output text)
+      GITHUB_SERVER_URL=${GITHUB_ORG_URL}/${GITHUB_REPO_NAME}
+      GITHUB_API_URL=$(echo "$${GITHUB_SERVER_URL}" | sed -E 's/github\.com\//api\.github\.com\/repos\//')
+      SERVICE_NAME=$${1:-unknown}
+      RUNNER_ID=$(jq -rc '.agentId' /opt/actions-runner/$${SERVICE_NAME}/.runner)
+
+      # deregister with GitHub
+      curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $${PERSONAL_ACCESS_TOKEN}" "$${GITHUB_API_URL}/actions/runners/$${RUNNER_ID}"
+
+  - path: '/usr/bin/github-scale-in-protection.sh'
+    owner: 'root:root'
+    permissions: '0755'
+    content: |
+      #!/usr/bin/env bash
+
+      set -uo pipefail;
+
+      function log() {
+        logfile="/var/log/github-scale-in-protection.log"
+        echo -e "$(date "+%Y-%m-%d %H:%M:%S") $${1:-}" | tee --append $${logfile}
+        return 0
+      }
+
+      metadata_token=`curl --silent -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
+      INSTANCE_ID="$(curl --silent -H "X-aws-ec2-metadata-token: $${metadata_token}" -v http://169.254.169.254/latest/meta-data/instance-id)"
+
+      jobs_in_progress=0
+      for SERVICE_NAME in $(find /opt/actions-runner -maxdepth 1 -type d -not -path '/opt/actions-runner'); do
+        currently_running_a_job=$(journalctl --unit $(cat $${SERVICE_NAME}/.service) --reverse --lines 1 | grep -oE "Running job:\s(.*)")
+        if [[ -n "$${currently_running_a_job}" ]]; then
+          (( jobs_in_progress+=1 ))
+        fi
+      done
+
+      if [[ jobs_in_progress -gt 0 ]]; then
+        log "ACTIVE ($${jobs_in_progress} jobs in progress)"
+      else
+        log "Idle"
+      fi
+
+      asg_name="${TF_ASG_NAME}"
+      github_scale_in_protection="$(cat /opt/actions-runner/scale-in-protection)"
+
+      if [[ $${jobs_in_progress} -gt 0 && "$${github_scale_in_protection}" != "ENABLED" ]]; then
+        aws autoscaling set-instance-protection --instance-ids $${INSTANCE_ID} --auto-scaling-group-name "$${asg_name}" --protected-from-scale-in --region eu-west-2
+        github_scale_in_protection="ENABLED"
+      elif [[ $${jobs_in_progress} -eq 0 && "$${github_scale_in_protection}" != "DISABLED" ]]; then
+        aws autoscaling set-instance-protection --instance-ids $${INSTANCE_ID} --auto-scaling-group-name "$${asg_name}" --no-protected-from-scale-in --region eu-west-2
+        github_scale_in_protection="DISABLED"
+      else
+        #log "Leaving scale-in protection as it is, i.e. $${github_scale_in_protection}"
+        exit 0
+      fi
+
+      echo "$${github_scale_in_protection}" > /opt/actions-runner/scale-in-protection
+      log "Scale-in protection $${github_scale_in_protection} for instance $${INSTANCE_ID}"
+
+  - path: '/etc/systemd/system/github-scale-in-protection.timer'
+    owner: 'root:root'
+    permissions: '0444'
+    content: |
+      [Unit]
+      Description=Run github scale in protection every 20 seconds
+
+      [Timer]
+      OnBootSec=20
+      OnUnitActiveSec=20
+      AccuracySec=1s
+
+      [Install]
+      WantedBy=timers.target
+
+  - path: '/etc/systemd/system/github-scale-in-protection.service'
+    owner: 'root:root'
+    permissions: '0444'
+    content: |
+      [Unit]
+      Description=Sets scale in protection for github runners while jobs are running
+
+      [Service]
+      ExecStart=/usr/bin/github-scale-in-protection.sh
+
+  - path: '/opt/actions-runner/scale-in-protection'
+    owner: 'root:root'
+    permissions: '0644'
+    content: |
+      DISABLED
+
+runcmd:
+  - [sh, -c, 'systemctl start amazon-cloudwatch-agent']
+  - [sh, -c, '/usr/bin/github-registration.sh']
+  - [sh, -c, 'systemctl enable --now github-scale-in-protection.timer']

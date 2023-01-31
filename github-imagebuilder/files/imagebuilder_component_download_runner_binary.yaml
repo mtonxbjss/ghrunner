@@ -1,0 +1,34 @@
+name: download runner binary
+description: Downloads the current GitHub Runner binary from S3
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+      - name: DownloadRunnerBinary
+        action: S3Download
+        onFailure: Abort
+        maxAttempts: 3
+        inputs:
+          - source: ${RUNNER_BINARY_BUCKET_PATH}
+            destination: /opt/actions-runner-linux-x64-latest.tar.gz
+            expectedBucketOwner: ${ECR_ACCOUNT_ID}
+            overwrite: true
+  - name: validate
+    steps:
+      - name: Fail
+        action: ExecuteBash
+        inputs:
+          commands:
+            - echo 1
+      - name: LocateRunnerBinary
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              if [ -f /opt/actions-runner-linux-x64-latest.tar.gz ]; then
+                echo "The GitHub Runner binary is downloaded to /opt/actions-runner-linux-x64-latest.tar.gz"
+              else
+                echo "The GitHub Runner binary is not downloaded. Failing build."
+                exit {{ validate.Fail.outputs.stdout }}
+              fi

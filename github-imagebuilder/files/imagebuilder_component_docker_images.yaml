@@ -1,0 +1,67 @@
+name: install caas docker images
+description: Downloads the latest CaaS docker images so they are cached before any jobs run
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+      - name: EcrLogin
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}
+      - name: PullTerraform
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              docker pull ${DOCKER_REGISTRY_ID}/terraform:latest
+      - name: PullPnpmWithCache
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              docker pull ${DOCKER_REGISTRY_ID}/dev-runner-node-16:pnpm-withcache
+  - name: validate
+    steps:
+      - name: Fail
+        action: ExecuteBash
+        inputs:
+          commands:
+            - echo 1
+      - name: EcrLogin
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}
+      - name: LocateTerraformImage
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              IMAGE_ID=$(docker images --quiet ${DOCKER_REGISTRY_ID}/terraform:latest)
+              if [ -n "$${IMAGE_ID}" ]; then
+                echo "The latest terraform docker image is cached."
+              else
+                echo "The latest terraform docker image has not been cached. Failing build."
+                exit {{ validate.Fail.outputs.stdout }}
+              fi
+      - name: LocatePnpmWithCacheImage
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              IMAGE_ID=$(docker images --quiet ${DOCKER_REGISTRY_ID}/dev-runner-node-16:pnpm-withcache)
+              if [ -n "$${IMAGE_ID}" ]; then
+                echo "The latest pnpm-withcache docker image is cached."
+              else
+                echo "The latest pnpm-withcache docker image has not been cached. Failing build."
+                exit {{ validate.Fail.outputs.stdout }}
+              fi

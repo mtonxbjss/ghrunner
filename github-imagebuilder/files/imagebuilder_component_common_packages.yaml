@@ -1,0 +1,33 @@
+name: install common packages
+description: Uses the apt package registry to install common packages needed by the github runners
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+      - name: CommonPackages
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              SUCCESS_CODE=0
+              apt-get update
+              apt-get install -y \
+                ca-certificates \
+                cron \
+                curl \
+                git \
+                gnupg \
+                htop \
+                iputils-ping \
+                jq \
+                lsb-release \
+                tree \
+                unzip \
+                vim \
+                wget
+              if [[ $? == $SUCCESS_CODE ]]; then
+                  echo "Successfully installed common packages from apt."
+              else
+                  echo "Unable to to install common packages from apt. Failing build."
+              fi
