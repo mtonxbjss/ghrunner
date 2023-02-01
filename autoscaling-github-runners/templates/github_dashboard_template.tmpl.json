@@ -1,0 +1,365 @@
+{
+  "widgets": [
+    {
+      "height": 2,
+      "width": 24,
+      "y": 0,
+      "x": 0,
+      "type": "text",
+      "properties": {
+        "markdown": "# ${UPPER_RUNNER_NAME} GitHub Runners Health Dashboard",
+        "background": "transparent"
+      }
+    },
+    {
+      "height": 12,
+      "width": 6,
+      "y": 13,
+      "x": 0,
+      "type": "text",
+      "properties": {
+        "markdown": "## GitHub Runner Health\n\n**CPU Utilization**\n\nDescribes the processing load on the GitHub Runners split by Auto Scaling Group (Small & Large runners). Does not represent CPU load on any individual runner instance, rather the load on the entire pool of runners. \n\n**Network In/Out**\n\nDescribes the network traffic throughput on the GitHub Runners split by Auto Scaling Group (Small & Large runners). Does not represent traffic volumes for any individual runner instance, rather the volumes across the entire pool of runners. \n\n**GitHub Failures**\n\nCounts the number of times a GitHub Runner has reported a failure to connect to the server or a failure to register itself to the server on initial boot.\n\n**Memory Usage %**\n\nDescribes the amount of memory that has been consumed on each GitHub Runner. These stats are for specific instances, rather than the ASG.\n\n**Disk Usage %**\n\nDescribes the amount of disk space that has been consumed on each GitHub Runner. These stats are for specific instances, rather than the ASG.",
+        "background": "transparent"
+      }
+    },
+    {
+      "height": 6,
+      "width": 6,
+      "y": 13,
+      "x": 6,
+      "type": "metric",
+      "properties": {
+        "view": "timeSeries",
+        "stacked": false,
+        "title": "Avg CPU Utilization",
+        "metrics": [
+          [
+            "AWS/EC2",
+            "CPUUtilization",
+            "AutoScalingGroupName",
+            "${AUTOSCALING_GROUP_NAME}"
+          ]
+        ],
+        "region": "eu-west-2",
+        "period": 300,
+        "yAxis": {
+          "left": {
+            "min": 0,
+            "max": 100
+          }
+        },
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#f7b6d2",
+              "label": "WARNING",
+              "value": 70,
+              "fill": "above"
+            }
+          ]
+        },
+        "legend": {
+          "position": "hidden"
+        }
+      }
+    },
+    {
+      "height": 6,
+      "width": 6,
+      "y": 13,
+      "x": 12,
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [
+            "AWS/EC2",
+            "NetworkIn",
+            "AutoScalingGroupName",
+            "${AUTOSCALING_GROUP_NAME}"
+          ],
+          [".", "NetworkOut", ".", ".", { "color": "#17becf" }]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "eu-west-2",
+        "title": "Network In/Out",
+        "legend": { "position": "hidden" },
+        "period": 300,
+        "yAxis": { "left": { "min": 0 } },
+        "stat": "Average"
+      }
+    },
+    {
+      "height": 6,
+      "width": 6,
+      "y": 13,
+      "x": 18,
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [
+            "${METRICS_NAMESPACE}",
+            "GitHubRunnerFailureCount",
+            { "region": "eu-west-2" }
+          ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "eu-west-2",
+        "title": "GitHub Failures",
+        "period": 300,
+        "stat": "Sum",
+        "yAxis": { "left": { "label": "Count", "min": 0, "showUnits": false } },
+        "legend": { "position": "hidden" }
+      }
+    },
+    {
+      "height": 6,
+      "width": 6,
+      "y": 19,
+      "x": 12,
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [
+            {
+              "expression": "SEARCH('{CWAgent, ImageId, InstanceId, InstanceType} MetricName=\"mem_used_percent\" AND InstanceType=${INSTANCE_TYPE}', 'Maximum', 300)",
+              "label": "GitHub Small Memory Usage %",
+              "id": "e1",
+              "region": "eu-west-2"
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "eu-west-2",
+        "title": "Max Memory Usage %",
+        "legend": { "position": "hidden" },
+        "period": 300,
+        "yAxis": { "left": { "max": 100, "min": 0, "showUnits": false } },
+        "stat": "Average",
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#f7b6d2",
+              "label": "WARNING",
+              "value": 70,
+              "fill": "above"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "height": 6,
+      "width": 6,
+      "y": 19,
+      "x": 18,
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [
+            {
+              "expression": "SEARCH('{CWAgent, ImageId, InstanceId, InstanceType, device, fstype, path} MetricName=\"disk_used_percent\" AND InstanceType=${INSTANCE_TYPE}', 'Maximum', 300)",
+              "label": "GitHub Small Disk Usage %",
+              "id": "e1",
+              "region": "eu-west-2"
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "eu-west-2",
+        "title": "Max Disk Usage %",
+        "legend": { "position": "hidden" },
+        "period": 300,
+        "yAxis": { "left": { "max": 100, "min": 0, "showUnits": false } },
+        "stat": "Average",
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#f7b6d2",
+              "label": "WARNING",
+              "value": 70,
+              "fill": "above"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "height": 6,
+      "width": 6,
+      "y": 19,
+      "x": 6,
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [
+            {
+              "expression": "SEARCH('{AWS/EC2,InstanceId} MetricName=\"CPUUtilization\"', 'Maximum', 300)",
+              "label": "GitHub Runner CPU Utilization %",
+              "id": "e1",
+              "region": "eu-west-2",
+              "color": "#9467bd"
+            }
+          ],
+          [
+            "AWS/EC2",
+            "CPUUtilization",
+            "AutoScalingGroupName",
+            "${AUTOSCALING_GROUP_NAME}",
+            { "id": "m1", "color": "#1f77b4", "visible": false }
+          ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "eu-west-2",
+        "title": "Max CPU Utilization %",
+        "legend": { "position": "hidden" },
+        "period": 300,
+        "yAxis": { "left": { "max": 100, "min": 0, "showUnits": false } },
+        "stat": "Maximum",
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#f7b6d2",
+              "label": "WARNING",
+              "value": 70,
+              "fill": "above"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "height": 6,
+      "width": 18,
+      "y": 2,
+      "x": 6,
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [
+            {
+              "expression": "(ar*2)-(rj+pj)",
+              "label": "Free Capacity",
+              "id": "fc",
+              "yAxis": "left",
+              "period": 60,
+              "color": "#ff7f0e",
+              "region": "eu-west-2",
+              "stat": "Maximum"
+            }
+          ],
+          [
+            "${METRICS_NAMESPACE}",
+            "githubRunning",
+            "Tag",
+            "${TAG_LIST}",
+            {
+              "label": "Running",
+              "color": "#7f7f7f",
+              "id": "rj",
+              "visible": false
+            }
+          ],
+          [
+            ".",
+            "githubQueued",
+            ".",
+            ".",
+            {
+              "label": "Pending",
+              "color": "#d62728",
+              "id": "pj",
+              "visible": false
+            }
+          ],
+          [
+            "AWS/AutoScaling",
+            "GroupInServiceInstances",
+            "AutoScalingGroupName",
+            "${AUTOSCALING_GROUP_NAME}",
+            {
+              "label": "Active Runners",
+              "color": "#1f77b4",
+              "id": "ar",
+              "visible": false,
+              "yAxis": "right"
+            }
+          ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "eu-west-2",
+        "liveData": true,
+        "stat": "Maximum",
+        "period": 60,
+        "title": "Free Capacity",
+        "annotations": {
+          "horizontal": [
+            {
+              "color": "#d62728",
+              "label": "Add Runners if below",
+              "value": 2,
+              "fill": "below"
+            },
+            {
+              "color": "#2ca02c",
+              "label": "Remove Runners if above",
+              "value": 5,
+              "fill": "above"
+            }
+          ]
+        },
+        "yAxis": {
+          "left": { "label": "Jobs", "showUnits": false, "min": -6, "max": 12 },
+          "right": { "label": "Jobs", "showUnits": false }
+        },
+        "legend": { "position": "hidden" }
+      }
+    },
+    {
+      "height": 11,
+      "width": 6,
+      "y": 2,
+      "x": 0,
+      "type": "text",
+      "properties": {
+        "markdown": "## GitHub Runner Utilization\n\n**Free Capacity**\n\nIs a product of (ar*cj)-(qj+rj), where\n- ar = active runners\n- cj = concurrent jobs per runner\n- qj = queued jobs\n- rj = running jobs\n\n**Active Runners**\n\nIs the number of EC2 instances currently in service that can receive GitHub jobs\n\n**Add Runners if Below**\n\nIf the Free Capacity metric dips into this zone then additional runner EC2 instances will be added\n\n**Remove Runners if Above**\n\nIf the Free Capacity metric rises into this zone for a sustained period then runner EC2 instances will be removed",
+        "background": "transparent"
+      }
+    },
+    {
+      "height": 5,
+      "width": 18,
+      "y": 8,
+      "x": 6,
+      "type": "metric",
+      "properties": {
+        "metrics": [
+          [
+            "AWS/AutoScaling",
+            "GroupInServiceInstances",
+            "AutoScalingGroupName",
+            "${AUTOSCALING_GROUP_NAME}",
+            { "label": "Active Runners", "color": "#1f77b4", "id": "ar" }
+          ]
+        ],
+        "view": "timeSeries",
+        "stacked": false,
+        "region": "eu-west-2",
+        "liveData": true,
+        "stat": "Maximum",
+        "period": 60,
+        "title": "Active Runners",
+        "yAxis": {
+          "left": { "min": 0, "label": "Runners", "showUnits": false },
+          "right": { "label": "", "showUnits": false }
+        },
+        "legend": { "position": "hidden" }
+      }
+    }
+  ]
+}

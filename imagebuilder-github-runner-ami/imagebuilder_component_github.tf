@@ -1,0 +1,28 @@
+resource "aws_imagebuilder_component" "github" {
+  for_each = local.imagebuilder_components
+
+  name = format("%s-%s-%s",
+    var.unique_prefix,
+    "imgbld-github-ami",
+    replace(each.key, "_", "-")
+  )
+
+  description = "${each.key} Component for building GitHub Runners"
+  platform    = "Linux"
+  version     = "1.0.0"
+
+  data = templatefile(format("%s/%s/%s_%s.yaml",
+    path.module,
+    "files",
+    "imagebuilder_component",
+    each.key
+    ),
+    {
+      ECR_ACCOUNT_ID            = var.runner_account_id
+      RUNNER_BINARY_BUCKET_PATH = "s3://${var.github_runner_binary_bucket_name}/${var.github_runner_binary_bucket_path}"
+      DOCKER_REGISTRY_ID        = var.docker_registry_id
+      DOCKER_REPO_NAME          = var.ecr_private_repository_name
+      REGION                    = var.region
+    }
+  )
+}
