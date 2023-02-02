@@ -21,12 +21,6 @@ variable "cloudwatch_metric_github_runner_failure_name" {
   default     = "GithubRunnerFailureCount"
 }
 
-variable "github_job_image_ecr_account" {
-  type        = string
-  description = "Account ID containing the ECR Docker Registry that hosts the images used for GitHub Actions jobs. Default is empty (i.e. no docker images required)"
-  default     = ""
-}
-
 variable "ec2_associate_public_ip_address" {
   type        = bool
   description = "Should all runner instances have public IP addresses attached (required only if you're deploying into a public subnet)"
@@ -83,7 +77,7 @@ variable "ec2_github_runner_tag_list" {
 
 variable "ec2_iam_role_extra_policy_attachments" {
   type        = list(string)
-  description = "List of policy ARNs to append to the runner's EC2 Instance Profile"
+  description = "List of policy ARNs to append to the runner's EC2 Instance Profile. Use this to give your runner permission to deploy things in your accounts."
   default     = []
 }
 
@@ -160,6 +154,12 @@ variable "ec2_terraform_deployment_roles" {
 variable "ec2_vpc_id" {
   type        = string
   description = "ID of the VPC used to host the EC2 instances for running GitHub jobs"
+}
+
+variable "github_job_image_ecr_account" {
+  type        = string
+  description = "Account ID containing the ECR Docker Registry that hosts the images used for GitHub Actions jobs. Used so that the runner can proactively log into that registry. Default is empty (i.e. no docker images required)"
+  default     = ""
 }
 
 variable "github_organization_url" {

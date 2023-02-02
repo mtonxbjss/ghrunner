@@ -20,7 +20,7 @@ resource "aws_imagebuilder_component" "github" {
     {
       ECR_ACCOUNT_ID            = var.runner_account_id
       RUNNER_BINARY_BUCKET_PATH = "s3://${var.github_runner_binary_bucket_name}/${var.github_runner_binary_bucket_path}"
-      DOCKER_REGISTRY_ID        = var.docker_registry_id
+      DOCKER_REGISTRY_ID        = "${var.github_job_image_ecr_account}.dkr.ecr.eu-west-2.amazonaws.com"
       DOCKER_REPO_NAME          = var.ecr_private_repository_name
       REGION                    = var.region
     }

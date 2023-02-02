@@ -13,10 +13,12 @@ write_files:
       set -ex
 
       # Connect (and automatically re-connect) to ECR Registry
-      aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}
-      echo -e "\naws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}" >> /etc/profile
-      echo "1 */6 * * * aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID} >/dev/null 2>&1" | tee -a mycron
-      crontab mycron
+      if [[ -n "${DOCKER_REGISTRY_ID}" ]]; then
+        aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}
+        echo -e "\naws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}" >> /etc/profile
+        echo "1 */6 * * * aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID} >/dev/null 2>&1" | tee -a mycron
+        crontab mycron
+      fi
 
       # Get the runner EC2 Instance Id
       metadata_token=`curl --silent -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`

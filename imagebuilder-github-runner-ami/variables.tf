@@ -43,9 +43,10 @@ variable "ecr_private_repository_name" {
   default     = ""
 }
 
-variable "docker_registry_id" {
+variable "github_job_image_ecr_account" {
   type        = string
-  description = "ID of the ECR Docker Registry that hosts the job docker images. May or may not be ECR. Defaults to empty (i.e. no job docker images are required)"
+  description = "Account ID containing the ECR Docker Registry that hosts the images used for GitHub Actions jobs. Used so that the runner can proactively log into that registry. Default is empty (i.e. no docker images required)"
+  default     = ""
 }
 
 variable "kms_deletion_window_in_days" {

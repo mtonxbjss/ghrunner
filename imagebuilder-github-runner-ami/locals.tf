@@ -1,9 +1,13 @@
 locals {
-  imagebuilder_components = toset([
-    "common_packages",
-    "download_runner_binary",
-    "docker_images"
-  ])
+  imagebuilder_components = toset(
+    flatten(
+      [
+        ["common_packages"],
+        ["download_runner_binary"],
+        length(var.github_job_image_ecr_account) == 0 ? [] : ["docker_images"]
+      ]
+    )
+  )
 
   resource_tags = merge(
     {
