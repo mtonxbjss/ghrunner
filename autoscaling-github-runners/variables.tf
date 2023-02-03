@@ -54,7 +54,7 @@ variable "ec2_dynamic_scaling_enabled" {
 variable "ec2_dynamic_scaling_metric_collection_cron_expression" {
   type        = string
   description = "Cron expression that dictates how often to run the cron expression that gathers github runner utilisation metrics. Default is every minute between 0700-1959 Monday-Friday UTC (0800-2059 during BST)"
-  default     = "cron(0/1 07-19 ? * MON-FRI *)"
+  default     = "0/1 07-19 ? * MON-FRI *"
 }
 
 variable "ec2_extra_security_groups" {
