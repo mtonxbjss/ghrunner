@@ -124,15 +124,23 @@ variable "imagebuilder_log_bucket_encryption_key_arn" {
 variable "github_runner_binary_bucket_name" {
   type        = string
   description = "Bucket that stores the version of the GitHub Runner binary that you want to use"
+  default     = ""
 }
 
 variable "github_runner_binary_bucket_path" {
   type        = string
   description = "Bucket path that stores the version of the GitHub Runner binary that you want to use"
+  default     = ""
 }
 
 variable "github_runner_binary_bucket_encryption_key_arn" {
   type        = string
   description = "Encryption key ARN for the bucket that stores the version of the GitHub Runner binary that you want to use. Defaults to empty (i.e. no encryption)"
+  default     = ""
+}
+
+variable "github_runner_binary_version" {
+  type        = string
+  description = "Version ID of the github runner binary to cache in the AMI image. No default, because GitHub doesn't support out of date versions for very long."
   default     = ""
 }

@@ -3,7 +3,7 @@ locals {
     flatten(
       [
         ["common_packages"],
-        ["download_runner_binary"],
+        length(var.github_runner_binary_bucket_name) == 0 ? ["download_runner_binary_from_source"] : ["download_runner_binary"],
         length(var.github_job_image_ecr_account) == 0 ? [] : ["docker_images"]
       ]
     )
