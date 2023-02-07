@@ -105,52 +105,62 @@ data "aws_iam_policy_document" "github_runner_basic" {
     ]
   }
 
-  statement {
-    sid    = "AllowAssumeDeployRole"
-    effect = "Allow"
-    actions = [
-      "sts:AssumeRole",
-    ]
-    resources = var.ec2_terraform_deployment_roles
+  dynamic "statement" {
+    for_each = length(var.ec2_terraform_deployment_roles) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowAssumeDeployRole"
+      effect = "Allow"
+      actions = [
+        "sts:AssumeRole",
+      ]
+      resources = var.ec2_terraform_deployment_roles
+
+    }
   }
 
-  statement {
-    sid    = "AllowS3Access"
-    effect = "Allow"
+  dynamic "statement" {
+    for_each = length(var.cicd_artifacts_bucket_name) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowS3Access"
+      effect = "Allow"
 
-    actions = [
-      "s3:Get*",
-      "s3:Head*",
-      "s3:List*",
-      "s3:DeleteObject*",
-      "s3:PutObject*",
-    ]
+      actions = [
+        "s3:Get*",
+        "s3:Head*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject*",
+      ]
 
-    resources = [
-      "arn:aws:s3:::${var.cicd_artifacts_bucket_name}",
-      "arn:aws:s3:::${var.cicd_artifacts_bucket_name}/*",
-    ]
+      resources = [
+        "arn:aws:s3:::${var.cicd_artifacts_bucket_name}",
+        "arn:aws:s3:::${var.cicd_artifacts_bucket_name}/*",
+      ]
+    }
   }
 
-  statement {
-    sid    = "AllowKMSSecrets"
-    effect = "Allow"
+  dynamic "statement" {
+    for_each = length(var.cicd_artifacts_bucket_key_arn) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowKMSSecrets"
+      effect = "Allow"
 
-    actions = [
-      "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:Encrypt",
-      "kms:GenerateDataKey*",
-      "kms:GetKeyPolicy",
-      "kms:GetKeyRotationStatus",
-      "kms:ListGrants",
-      "kms:ListResourceTags",
-      "kms:ReEncrypt*",
-    ]
+      actions = [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:GetKeyPolicy",
+        "kms:GetKeyRotationStatus",
+        "kms:ListGrants",
+        "kms:ListResourceTags",
+        "kms:ReEncrypt*",
+      ]
 
-    resources = [
-      var.cicd_artifacts_bucket_key_arn,
-    ]
+      resources = [
+        var.cicd_artifacts_bucket_key_arn,
+      ]
+    }
   }
 
   statement {

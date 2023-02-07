@@ -2,11 +2,13 @@
 variable "cicd_artifacts_bucket_name" {
   type        = string
   description = "Bucket that stores all CICD artifacts for the pipeline(s)"
+  default     = ""
 }
 
 variable "cicd_artifacts_bucket_key_arn" {
   type        = string
   description = "Encryption key ARN for the bucket that stores all CICD artifacts for the pipeline(s)"
+  default     = ""
 }
 
 variable "cloudwatch_metric_cloud_init_failure_name" {
@@ -48,7 +50,7 @@ variable "ec2_autoscaling_minimum_instances" {
 variable "ec2_dynamic_scaling_enabled" {
   type        = bool
   description = "Controls whether GitHub runners dynamically scale up/down depending on how busy the server is"
-  default     = true
+  default     = false
 }
 
 variable "ec2_dynamic_scaling_metric_collection_cron_expression" {
