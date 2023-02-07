@@ -177,7 +177,6 @@ variable "github_repository_name" {
 variable "iam_roles_with_admin_access_to_created_resources" {
   type        = list(string)
   description = "List of IAM Role ARNs that should have admin access to any resources created in this module that have resource policies"
-  default     = []
 }
 
 variable "iam_roles_with_read_access_to_created_resources" {
