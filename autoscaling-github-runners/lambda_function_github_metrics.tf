@@ -16,11 +16,11 @@ resource "aws_lambda_function" "github_metrics" {
 
   environment {
     variables = {
-      GITHUB_PAT_SECRET_ARN  = aws_secretsmanager_secret.github_pat.arn
-      TAG_LIST               = var.ec2_github_runner_tag_list
-      GITHUB_CAAS_OWNER      = "NHSDigital"
-      GITHUB_CAAS_REPO_NAMES = var.github_repository_name
-      CLOUDWATCH_NAMESPACE   = local.cloudwatch_logs_metric_filters_namespace
+      GITHUB_PAT_SECRET_ARN = aws_secretsmanager_secret.github_pat.arn
+      TAG_LIST              = var.ec2_github_runner_tag_list
+      GITHUB_OWNER          = "NHSDigital"
+      GITHUB_REPO_NAMES     = var.github_repository_name
+      CLOUDWATCH_NAMESPACE  = local.cloudwatch_logs_metric_filters_namespace
     }
   }
 }

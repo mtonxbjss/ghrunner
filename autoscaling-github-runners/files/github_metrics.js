@@ -147,8 +147,8 @@ exports.handler = async () => {
     // get env vars
     const {
       GITHUB_PAT_SECRET_ARN: tokenPath,
-      GITHUB_CAAS_OWNER: ownerId,
-      GITHUB_CAAS_REPO_NAMES: repoId,
+      GITHUB_OWNER: ownerId,
+      GITHUB_REPO_NAMES: repoId,
       TAG_LIST: tag,
       CLOUDWATCH_NAMESPACE: cloudwatchNamespace,
     } = process.env;

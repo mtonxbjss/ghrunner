@@ -1,5 +1,5 @@
-name: install caas docker images
-description: Downloads the latest CaaS docker images so they are cached before any jobs run
+name: install docker images
+description: Downloads the latest docker images so they are cached before any jobs run
 schemaVersion: 1.0
 phases:
   - name: build

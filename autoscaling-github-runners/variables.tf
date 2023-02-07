@@ -1,12 +1,12 @@
 
 variable "cicd_artifacts_bucket_name" {
   type        = string
-  description = "Bucket that stores all CICD artifacts for the CaaS platform"
+  description = "Bucket that stores all CICD artifacts for the pipeline(s)"
 }
 
 variable "cicd_artifacts_bucket_key_arn" {
   type        = string
-  description = "Encryption key ARN for the bucket that stores all CICD artifacts for the CaaS platform"
+  description = "Encryption key ARN for the bucket that stores all CICD artifacts for the pipeline(s)"
 }
 
 variable "cloudwatch_metric_cloud_init_failure_name" {

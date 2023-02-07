@@ -60,8 +60,8 @@ unique_prefix           = local.prefix
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_cicd_artifacts_bucket_key_arn"></a> [cicd\_artifacts\_bucket\_key\_arn](#input\_cicd\_artifacts\_bucket\_key\_arn) | Encryption key ARN for the bucket that stores all CICD artifacts for the CaaS platform | `string` | n/a | yes |
-| <a name="input_cicd_artifacts_bucket_name"></a> [cicd\_artifacts\_bucket\_name](#input\_cicd\_artifacts\_bucket\_name) | Bucket that stores all CICD artifacts for the CaaS platform | `string` | n/a | yes |
+| <a name="input_cicd_artifacts_bucket_key_arn"></a> [cicd\_artifacts\_bucket\_key\_arn](#input\_cicd\_artifacts\_bucket\_key\_arn) | Encryption key ARN for the bucket that stores all CICD artifacts for the pipeline(s) | `string` | n/a | yes |
+| <a name="input_cicd_artifacts_bucket_name"></a> [cicd\_artifacts\_bucket\_name](#input\_cicd\_artifacts\_bucket\_name) | Bucket that stores all CICD artifacts for the pipeline(s) | `string` | n/a | yes |
 | <a name="input_cloudwatch_metric_cloud_init_failure_name"></a> [cloudwatch\_metric\_cloud\_init\_failure\_name](#input\_cloudwatch\_metric\_cloud\_init\_failure\_name) | The name to give the metric that tracks Cloud Init failures on GitHub Runner EC2 instances. Defaults to CloudInitFailureCount | `string` | `"CloudInitFailureCount"` | no |
 | <a name="input_cloudwatch_metric_github_runner_failure_name"></a> [cloudwatch\_metric\_github\_runner\_failure\_name](#input\_cloudwatch\_metric\_github\_runner\_failure\_name) | The name to give the metric that tracks GitHub Connectivity failures on GitHub Runner EC2 instances. Defaults to GithubRunnerFailureCount | `string` | `"GithubRunnerFailureCount"` | no |
 | <a name="input_ec2_associate_public_ip_address"></a> [ec2\_associate\_public\_ip\_address](#input\_ec2\_associate\_public\_ip\_address) | Should all runner instances have public IP addresses attached (required only if you're deploying into a public subnet) | `bool` | `false` | no |
