@@ -16,21 +16,15 @@ variable "ami_version_number" {
   default     = "1.0.0"
 }
 
-variable "ecr_private_repository_account_id" {
+variable "github_job_image_ecr_account_id" {
   type        = string
   description = "The AWS account ID that hosts the private ECR registry for job docker images. Defaults to empty (i.e. no private repository required)"
   default     = ""
 }
 
-variable "ecr_private_repository_name" {
+variable "github_job_image_ecr_repository_name" {
   type        = string
   description = "The name of the ECR repository for job docker images. Defaults to empty (i.e. no private repository required)"
-  default     = ""
-}
-
-variable "github_job_image_ecr_account" {
-  type        = string
-  description = "Account ID containing the ECR Docker Registry that hosts the images used for GitHub Actions jobs. Used so that the runner can proactively log into that registry. Default is empty (i.e. no docker images required)"
   default     = ""
 }
 

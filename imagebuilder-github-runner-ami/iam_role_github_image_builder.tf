@@ -149,7 +149,7 @@ data "aws_iam_policy_document" "github_image_builder" {
   }
 
   dynamic "statement" {
-    for_each = length(var.ecr_private_repository_account_id) == 0 ? toset([]) : toset([1])
+    for_each = length(var.github_job_image_ecr_account_id) == 0 ? toset([]) : toset([1])
     content {
       sid    = "AllowEcrPull"
       effect = "Allow"
@@ -159,13 +159,13 @@ data "aws_iam_policy_document" "github_image_builder" {
         "ecr:GetDownloadUrlForLayer",
       ]
       resources = [
-        "arn:aws:ecr:${var.region}:${var.ecr_private_repository_account_id}:repository/${var.ecr_private_repository_name}",
+        "arn:aws:ecr:${var.region}:${var.github_job_image_ecr_account_id}:repository/${var.github_job_image_ecr_repository_name}",
       ]
     }
   }
 
   dynamic "statement" {
-    for_each = length(var.ecr_private_repository_account_id) == 0 ? toset([]) : toset([1])
+    for_each = length(var.github_job_image_ecr_account_id) == 0 ? toset([]) : toset([1])
     content {
       sid    = "AllowEcrAuth"
       effect = "Allow"
