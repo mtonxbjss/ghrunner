@@ -11,8 +11,67 @@ sections:
   show: []
 
 content: |-
-  ## autoscaling-github-runners
+  ## autoscaling-github-runners Module
 
+  ### Pre-Requisites
+  Before deploying this module you must:
+  1. Have a VPC with at least one subnet. The Subnets can be private or public, but they must have access to the Internet via IGW or NAT
+  2. Have deployed the `imagebuilder-github-runner-ami` module, so that you can supply the image ARN as an input to this module
+  3. Have a GitHub project, and have generated a Personal Access Token with these permissions as a minimum:
+    - *Read Access to Metadata*
+    - *Read and Write Access to Administration*
+
+  ### Simplest Possible Example
+  This is a single GitHub Runner that does not autoscale and does not shut down overnight
+
+  ```terraform
+  module "autoscaling_github_runners_simple" {
+    source = "git::https://github.com/mtonxbjss/ghrunner.git//autoscaling-github-runners"
+
+    ec2_imagebuilder_image_arn                       = module.imagebuilder_github_runner_ami.imagebuilder_image_arn_xxx
+    ec2_subnet_ids                                   = module.vpc.private_subnets
+    ec2_vpc_id                                       = module.vpc.vpc_id
+    iam_roles_with_admin_access_to_created_resources = [local.identifiers.account_admin_role_arn]
+    github_organization_url                          = "https://github.com/bjsscloud"
+    github_repository_name                           = "bjss-careers-aws-dev"
+    region                                           = var.region
+    runner_account_id                                = var.aws_account_id
+    unique_prefix                                    = "${local.prefix}-simple"
+  }
+  ```
+
+  ### More Complex Example
+  This is an auto-scaling group of GitHub Runners using multiple runner tags, spot instances and registering with an ECR Registry on boot
+
+  ```terraform
+  module "autoscaling_github_runners_mid" {
+    source = "git::https://github.com/mtonxbjss/ghrunner.git//autoscaling-github-runners"
+
+    ec2_autoscaling_maximum_instances = 5
+    ec2_dynamic_scaling_enabled       = true
+    ec2_github_runner_tag_list        = "techtest,miscellaneous"
+    ec2_imagebuilder_image_arn        = module.imagebuilder_github_runner_ami.imagebuilder_image_arn_xxx
+    ec2_spot_instances_max_price      = 0.5
+    ec2_spot_instances_preferred      = true
+    ec2_subnet_ids                    = module.vpc.private_subnets
+    ec2_vpc_id                        = module.vpc.vpc_id
+
+    iam_roles_with_admin_access_to_created_resources = [local.identifiers.account_admin_role_arn]
+
+    github_job_image_ecr_account = var.aws_account_id
+    github_organization_url      = "https://github.com/bjsscloud"
+    github_repository_name       = "bjss-careers-aws-dev"
+
+    region            = var.region
+    runner_account_id = var.aws_account_id
+    unique_prefix     = "${local.prefix}-mid"
+  }
+
+  ```
+
+
+  ### Full Worked Example With All Parameters Expressed
+  This is an Auto Scaling Group of GitHub Runners that scales down to a single pilot-light runner overnight
   ```terraform
 
   module "autoscaling_github_runners" {

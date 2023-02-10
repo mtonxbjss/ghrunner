@@ -11,7 +11,7 @@ data "cloudinit_config" "github_runner" {
         CLOUDWATCH_AGENT_CONFIG = local.cloudwatch_agent_config
         TF_ASG_NAME             = "${var.unique_prefix}-${var.ec2_github_runner_name}"
         REGION                  = var.region
-        TAG_LIST                = var.ec2_github_runner_tag_list
+        TAG_LIST                = replace(var.ec2_github_runner_tag_list, " ", "")
         CONCURRENT              = var.ec2_maximum_concurrent_github_jobs
         DOCKER_REGISTRY_ID      = "${var.github_job_image_ecr_account}.dkr.ecr.eu-west-2.amazonaws.com"
         GITHUB_ORG_URL          = var.github_organization_url

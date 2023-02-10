@@ -1,6 +1,33 @@
 <!-- BEGIN_TF_DOCS -->
-## autoscaling-github-runners
+## autoscaling-github-runners Module
 
+### Pre-Requisites
+Before deploying this module you must:
+1. Have a VPC with at least one subnet. The Subnets can be private or public, but they must have access to the Internet via IGW or NAT
+2. Have deployed the `imagebuilder-github-runner-ami` module, so that you can supply the image ARN as an input to this module
+3. Have a GitHub project, and have generated a Personal Access Token that has a minimum of Read Access to Metadata and Read and Write Access to Administration
+
+### Simplest Possible Example
+This is a single GitHub Runner that does not autoscale and does not shut down overnight
+
+```terraform
+module "autoscaling_github_runners_simple" {
+source = "git::https://github.com/mtonxbjss/ghrunner.git//autoscaling-github-runners"
+
+ec2_imagebuilder_image_arn                       = module.imagebuilder_github_runner_ami.imagebuilder_image_arn_xxx
+ec2_subnet_ids                                   = module.vpc.private_subnets
+ec2_vpc_id                                       = module.vpc.vpc_id
+iam_roles_with_admin_access_to_created_resources = [local.identifiers.account_admin_role_arn]
+github_organization_url                          = "https://github.com/bjsscloud"
+github_repository_name                           = "bjss-careers-aws-dev"
+region                                           = var.region
+runner_account_id                                = var.aws_account_id
+unique_prefix                                    = "${local.prefix}-simple"
+}
+```
+
+### Full Worked Example With All Parameters Expressed
+This is an Auto Scaling Group of GitHub Runners that scales down to a single pilot-light runner overnight
 ```terraform
 
 module "autoscaling_github_runners" {
