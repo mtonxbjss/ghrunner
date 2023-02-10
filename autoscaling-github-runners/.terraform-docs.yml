@@ -15,11 +15,9 @@ content: |-
 
   ### Pre-Requisites
   Before deploying this module you must:
-  1. Have a VPC with at least one subnet. The Subnets can be private or public, but they must have access to the Internet via IGW or NAT
-  2. Have deployed the `imagebuilder-github-runner-ami` module, so that you can supply the image ARN as an input to this module
-  3. Have a GitHub project, and have generated a Personal Access Token with these permissions as a minimum:
-    - *Read Access to Metadata*
-    - *Read and Write Access to Administration*
+  * Have a VPC with at least one subnet. The Subnets can be private or public, but they must have access to the Internet via IGW or NAT
+  * Have deployed the `imagebuilder-github-runner-ami` module, so that you can supply the image ARN as an input to this module
+  * Have a GitHub project, and have generated a Personal Access Token with these permissions as a minimum: *Read Access to Metadata*, *Read and Write Access to Administration*
 
   ### Simplest Possible Example
   This is a single GitHub Runner that does not autoscale and does not shut down overnight

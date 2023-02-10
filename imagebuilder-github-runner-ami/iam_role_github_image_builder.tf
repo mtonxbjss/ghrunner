@@ -149,7 +149,7 @@ data "aws_iam_policy_document" "github_image_builder" {
   }
 
   dynamic "statement" {
-    for_each = length(var.github_job_image_ecr_account_id) == 0 ? toset([]) : toset([1])
+    for_each = length(var.github_job_image_ecr_account_id) == 0  && length(var.github_job_image_ecr_repository_name) == 0 ? toset([]) : toset([1])
     content {
       sid    = "AllowEcrPull"
       effect = "Allow"

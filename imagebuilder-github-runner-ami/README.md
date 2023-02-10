@@ -1,6 +1,11 @@
 <!-- BEGIN_TF_DOCS -->
 ## imagebuilder-github-runner-ami Module
 
+### Pre-Requisites
+Before deploying this module you must:
+* Have a VPC with at least one subnet. The Subnets can be private or public, but they must have access to the Internet via IGW or NAT
+* An S3 bucket in which to hold logs from the image building process, and (optionally) an encryption key for that bucket in KMS
+
 ### Simplest Possible Example
 This is an imagebuilder pipeline to generate a GitHub Runner AMI using default values for everything.
 
@@ -11,9 +16,7 @@ source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-github-ru
 ami_build_pipeline_cron_expression = "cron(0 4 ? * MON *)"
 ami_version_number                 = "1.0.0"
 
-github_job_image_ecr_account_id      = var.aws_account_id
-github_job_image_ecr_repository_name = aws_ecr_repository.terraform.name
-github_runner_binary_version         = "2.299.2"
+github_runner_binary_version = "2.299.2"
 
 imagebuilder_ec2_subnet_id = module.vpc.private_subnets[0]
 imagebuilder_ec2_vpc_id    = module.vpc.vpc_id
@@ -36,18 +39,15 @@ unique_prefix     = "${local.prefix}-simple"
 This is an imagebuilder pipeline to generate a GitHub Runner AMI overriding default values
 
 ```terraform
-
 module "imagebuilder_github_runner_ami" {
 source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-github-runner-ami"
 
 ami_build_pipeline_cron_expression = "cron(0 4 ? * MON *)"
 ami_version_number                 = "1.0.0"
 
-ecr_private_repository_account_id = var.aws_account_id
-ecr_private_repository_name       = aws_ecr_repository.terraform.name
-
-github_job_image_ecr_account = var.aws_account_id
-github_runner_binary_version = "2.299.2"
+github_job_image_ecr_account_id      = var.aws_account_id
+github_job_image_ecr_repository_name = aws_ecr_repository.terraform.name
+github_runner_binary_version         = "2.299.2"
 
 imagebuilder_ec2_instance_type        = "t3a.large"
 imagebuilder_ec2_root_volume_size     = 100
@@ -69,7 +69,6 @@ region                  = var.region
 runner_account_id       = var.aws_account_id
 unique_prefix           = local.prefix
 }
-
 ```
 ## Inputs
 

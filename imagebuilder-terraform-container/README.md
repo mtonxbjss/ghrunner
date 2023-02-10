@@ -1,9 +1,42 @@
 <!-- BEGIN_TF_DOCS -->
-# imagebuilder-terraform-container
+## imagebuilder-terraform-container Module
 
-## Example Usage
+### Pre-Requisites
+Before deploying this module you must:
+* Have a VPC with at least one subnet. The Subnets can be private or public, but they must have access to the Internet via IGW or NAT
+* Have an ECR repository in an AWS account to which you have access. Once built, your pipeline will push new images to this repository
+* An S3 bucket in which to hold logs from the image building process, and (optionally) an encryption key for that bucket in KMS
+
+### Simplest Possible Example
 ```terraform
+module "imagebuilder_terraform_container" {
+source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-terraform-container"
 
+container_build_pipeline_cron_expression = "cron(0 4 ? * MON *)"
+container_version_number                 = "1.0.0"
+
+ecr_private_repository_account_id = var.aws_account_id
+ecr_private_repository_name       = aws_ecr_repository.terraform.name
+
+imagebuilder_ec2_subnet_id             = module.vpc.private_subnets[0]
+imagebuilder_ec2_vpc_id                = module.vpc.vpc_id
+
+imagebuilder_log_bucket_encryption_key_arn = aws_kms_key.cicd.arn
+imagebuilder_log_bucket_name               = aws_s3_bucket.cicd.bucket
+imagebuilder_log_bucket_path               = "github-runner/container-logs/terraform"
+
+iam_roles_with_admin_access_to_created_resources = [
+local.identifiers.account_admin_role_arn,
+]
+
+region                  = var.region
+runner_account_id       = var.aws_account_id
+unique_prefix           = local.prefix
+}
+```
+
+### Full Worked Example with All Parameters Expressed
+```terraform
 module "imagebuilder_terraform_container" {
 source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-terraform-container"
 
@@ -33,7 +66,6 @@ region                  = var.region
 runner_account_id       = var.aws_account_id
 unique_prefix           = local.prefix
 }
-
 ```
 ## Inputs
 
