@@ -1,11 +1,7 @@
 variable "ami_build_pipeline_cron_expression" {
   type        = string
   description = "The cron schedule expression for when the AMI should be rebuilt. Defaults to 4am MON-FRI"
-  default     = "cron(0 4 ? * MON-FRI *)"
-  validation {
-    condition     = can(regex("^cron\\(.*\\)$", var.ami_build_pipeline_cron_expression))
-    error_message = "Invalid cron expression. A valid cron expression must have 5 fields separated by commas and each field must be a number between 0 and 59 or an asterisk (*)"
-  }
+  default     = "0 4 ? * MON-FRI *"
 }
 
 variable "ami_sharing_account_id_list" {

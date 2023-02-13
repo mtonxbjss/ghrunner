@@ -74,7 +74,7 @@ unique_prefix           = local.prefix
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_ami_build_pipeline_cron_expression"></a> [ami\_build\_pipeline\_cron\_expression](#input\_ami\_build\_pipeline\_cron\_expression) | The cron schedule expression for when the AMI should be rebuilt. Defaults to 4am MON-FRI | `string` | `"cron(0 4 ? * MON-FRI *)"` | no |
+| <a name="input_ami_build_pipeline_cron_expression"></a> [ami\_build\_pipeline\_cron\_expression](#input\_ami\_build\_pipeline\_cron\_expression) | The cron schedule expression for when the AMI should be rebuilt. Defaults to 4am MON-FRI | `string` | `"0 4 ? * MON-FRI *"` | no |
 | <a name="input_ami_sharing_account_id_list"></a> [ami\_sharing\_account\_id\_list](#input\_ami\_sharing\_account\_id\_list) | A list of additional AWS account IDs that you want to share your completed AMI with. Does not need to include the account in which the AMI is built as this is included by default | `list(string)` | `[]` | no |
 | <a name="input_ami_version_number"></a> [ami\_version\_number](#input\_ami\_version\_number) | Sematic versioning version number of the AMI to be created. Defaults to 1.0.0 | `string` | `"1.0.0"` | no |
 | <a name="input_github_job_image_ecr_account_id"></a> [github\_job\_image\_ecr\_account\_id](#input\_github\_job\_image\_ecr\_account\_id) | The AWS account ID that hosts the private ECR registry for job docker images. Defaults to empty (i.e. no private repository required) | `string` | `""` | no |
