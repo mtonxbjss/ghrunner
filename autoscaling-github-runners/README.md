@@ -161,6 +161,7 @@ unique_prefix           = local.prefix
 |------|-------------|
 | <a name="output_auto_scaling_group_arn"></a> [auto\_scaling\_group\_arn](#output\_auto\_scaling\_group\_arn) | n/a |
 | <a name="output_auto_scaling_group_name"></a> [auto\_scaling\_group\_name](#output\_auto\_scaling\_group\_name) | n/a |
+| <a name="output_github_pat_secret_arn"></a> [github\_pat\_secret\_arn](#output\_github\_pat\_secret\_arn) | n/a |
 | <a name="output_instance_profile_arn"></a> [instance\_profile\_arn](#output\_instance\_profile\_arn) | n/a |
 | <a name="output_instance_profile_name"></a> [instance\_profile\_name](#output\_instance\_profile\_name) | n/a |
 | <a name="output_instance_role_arn"></a> [instance\_role\_arn](#output\_instance\_role\_arn) | n/a |

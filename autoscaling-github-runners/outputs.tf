@@ -46,3 +46,6 @@ output "security_group_id" {
   value = length(aws_security_group.github_runner) > 0 ? aws_security_group.github_runner.id : ""
 }
 
+output "github_pat_secret_arn" {
+  value = aws_secretsmanager_secret.github_pat.arn
+}
