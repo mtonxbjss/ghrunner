@@ -43,6 +43,19 @@ resource "aws_iam_policy" "github_image_builder" {
 
 data "aws_iam_policy_document" "github_image_builder" {
   statement {
+    sid    = "AllowLogs"
+    effect = "Allow"
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+    resources = [
+      "arn:aws:logs:${var.region}:${var.runner_account_id}:log-group/aws/imagebuilder/*",
+    ]
+  }
+
+  statement {
     sid    = "AllowS3Get"
     effect = "Allow"
     actions = [
