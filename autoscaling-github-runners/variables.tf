@@ -1,13 +1,13 @@
 
 variable "cicd_artifacts_bucket_name" {
   type        = string
-  description = "Bucket that stores all CICD artifacts for the pipeline(s)"
+  description = "Bucket that stores all CICD artifacts for the pipeline(s). The runner will be granted permission to read/write contents of this bucket"
   default     = ""
 }
 
 variable "cicd_artifacts_bucket_key_arn" {
   type        = string
-  description = "Encryption key ARN for the bucket that stores all CICD artifacts for the pipeline(s)"
+  description = "Encryption key ARN for the bucket that stores all CICD artifacts for the pipeline(s). The runner will be granted permission to encrypt/decrypt using this key"
   default     = ""
   validation {
     condition     = can(regex("^(arn:aws:kms:[a-z0-9-]+:[0-9]+:.*)?$", var.cicd_artifacts_bucket_key_arn))
@@ -77,7 +77,7 @@ variable "ec2_dynamic_scaling_metric_collection_cron_expression" {
 
 variable "ec2_extra_security_groups" {
   type        = list(string)
-  description = "List of security group IDs to append to the EC2 instances for running GitHub jobs. Defaults to an empty list"
+  description = "List of additional security group IDs to append to the EC2 instances for running GitHub jobs. Defaults to an empty list. All runners will be allowed unrestricted egress traffic on ports 80, 443 and ICMP as standard"
   default     = []
   validation {
     condition = length([
@@ -174,13 +174,13 @@ variable "ec2_runner_role_tag" {
 
 variable "ec2_spot_instances_max_price" {
   type        = string
-  description = "max spot price for github runners"
-  default     = "0.3"
+  description = "Specifies the maximum spot price to pay for github runners. Only applies if ec2_spot_instances_preferred is true"
+  default     = "0.5"
 }
 
 variable "ec2_spot_instances_preferred" {
   type        = bool
-  description = "run github runners as spot instances"
+  description = "Set to true in order to run github runners as spot instances. Defaults to false."
   default     = false
 }
 
@@ -198,7 +198,7 @@ variable "ec2_subnet_ids" {
 
 variable "ec2_terraform_deployment_roles" {
   type        = list(string)
-  description = "List of deployment role ARNs that can be assumed by the runner in order to execute Terraform commands"
+  description = "List of deployment role ARNs that can be assumed by the runner in order to execute Terraform commands. The runner will be granted permission to assume these roles"
   default     = []
   validation {
     condition = length([
@@ -308,6 +308,32 @@ variable "runner_account_id" {
   validation {
     condition     = can(regex("^[0-9]{12}$", var.runner_account_id))
     error_message = "Invalid account id. A valid account ID must contain 12 digits"
+  }
+}
+
+variable "state_bucket_name" {
+  type        = string
+  description = "Bucket that stores all Terraform State for the pipeline(s). The runner will be granted permission to read/write contents of this bucket"
+  default     = ""
+}
+
+variable "state_bucket_key_arn" {
+  type        = string
+  description = "Encryption key ARN for the bucket that stores all Terraform State for the pipeline(s). The runner will be granted permission to encrypt/decrypt using this key"
+  default     = ""
+  validation {
+    condition     = can(regex("^(arn:aws:kms:[a-z0-9-]+:[0-9]+:.*)?$", var.state_bucket_key_arn))
+    error_message = "Invalid Amazon Resource Name. A valid KMS ARN must start with 'arn:aws:kms', followed by a region, account ID and resource name separated by colons."
+  }
+}
+
+variable "state_lock_table_arn" {
+  type        = string
+  description = "DynamoDB Table that stores all Terraform State Locks for the pipeline(s). The runner will be granted permission to read/write this table."
+  default     = ""
+  validation {
+    condition     = can(regex("^(arn:aws:dynamodb:[a-z0-9-]+:[0-9]+:table/.*)?$", var.state_lock_table_arn))
+    error_message = "Invalid Amazon Resource Name. A valid DynamoDB Table ARN must start with 'arn:aws:dynamodb', followed by a region, account ID and resource name separated by colons."
   }
 }
 

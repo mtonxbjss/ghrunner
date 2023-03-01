@@ -34,6 +34,9 @@ content: |-
     github_repository_name                           = "bjss-careers-aws-dev"
     region                                           = var.region
     runner_account_id                                = var.aws_account_id
+    state_bucket_name                                = data.terraform_remote_state.bootstrap.outputs.state_bucket_name
+    state_bucket_key_arn                             = data.terraform_remote_state.bootstrap.outputs.state_bucket_key
+    state_lock_table_arn                             = data.terraform_remote_state.bootstrap.outputs.state_lock_table_arn
     unique_prefix                                    = "${local.prefix}-simple"
   }
   ```
@@ -62,6 +65,11 @@ content: |-
 
     region            = var.region
     runner_account_id = var.aws_account_id
+
+    state_bucket_name    = data.terraform_remote_state.bootstrap.outputs.state_bucket_name
+    state_bucket_key_arn = data.terraform_remote_state.bootstrap.outputs.state_bucket_key
+    state_lock_table_arn = data.terraform_remote_state.bootstrap.outputs.state_lock_table_arn
+
     unique_prefix     = "${local.prefix}-mid"
   }
 
@@ -120,6 +128,11 @@ content: |-
     permission_boundary_arn = aws_iam_policy.permissions_boundary.arn
     region                  = var.region
     runner_account_id       = var.aws_account_id
+
+    state_bucket_name    = data.terraform_remote_state.bootstrap.outputs.state_bucket_name
+    state_bucket_key_arn = data.terraform_remote_state.bootstrap.outputs.state_bucket_key
+    state_lock_table_arn = data.terraform_remote_state.bootstrap.outputs.state_lock_table_arn
+
     unique_prefix           = local.prefix
   }
 

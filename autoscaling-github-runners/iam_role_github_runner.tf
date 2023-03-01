@@ -77,6 +77,7 @@ data "aws_iam_policy_document" "github_runner_basic" {
       "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer",
+      "ecr:GetAuthorizationToken",
     ]
     resources = [
       "*",
@@ -92,75 +93,6 @@ data "aws_iam_policy_document" "github_runner_basic" {
     resources = [
       aws_secretsmanager_secret.github_pat.arn
     ]
-  }
-
-  statement {
-    sid    = "AllowEcrAuth"
-    effect = "Allow"
-    actions = [
-      "ecr:GetAuthorizationToken",
-    ]
-    resources = [
-      "*",
-    ]
-  }
-
-  dynamic "statement" {
-    for_each = length(var.ec2_terraform_deployment_roles) > 0 ? ["1"] : []
-    content {
-      sid    = "AllowAssumeDeployRole"
-      effect = "Allow"
-      actions = [
-        "sts:AssumeRole",
-      ]
-      resources = var.ec2_terraform_deployment_roles
-
-    }
-  }
-
-  dynamic "statement" {
-    for_each = length(var.cicd_artifacts_bucket_name) > 0 ? ["1"] : []
-    content {
-      sid    = "AllowS3Access"
-      effect = "Allow"
-
-      actions = [
-        "s3:Get*",
-        "s3:Head*",
-        "s3:List*",
-        "s3:DeleteObject*",
-        "s3:PutObject*",
-      ]
-
-      resources = [
-        "arn:aws:s3:::${var.cicd_artifacts_bucket_name}",
-        "arn:aws:s3:::${var.cicd_artifacts_bucket_name}/*",
-      ]
-    }
-  }
-
-  dynamic "statement" {
-    for_each = length(var.cicd_artifacts_bucket_key_arn) > 0 ? ["1"] : []
-    content {
-      sid    = "AllowKMSSecrets"
-      effect = "Allow"
-
-      actions = [
-        "kms:Decrypt",
-        "kms:DescribeKey",
-        "kms:Encrypt",
-        "kms:GenerateDataKey*",
-        "kms:GetKeyPolicy",
-        "kms:GetKeyRotationStatus",
-        "kms:ListGrants",
-        "kms:ListResourceTags",
-        "kms:ReEncrypt*",
-      ]
-
-      resources = [
-        var.cicd_artifacts_bucket_key_arn,
-      ]
-    }
   }
 
   statement {
@@ -197,5 +129,127 @@ data "aws_iam_policy_document" "github_runner_basic" {
     resources = [
       "*",
     ]
+  }
+
+  dynamic "statement" {
+    for_each = length(var.ec2_terraform_deployment_roles) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowAssumeDeployRole"
+      effect = "Allow"
+      actions = [
+        "sts:AssumeRole",
+      ]
+      resources = var.ec2_terraform_deployment_roles
+
+    }
+  }
+
+  dynamic "statement" {
+    for_each = length(var.cicd_artifacts_bucket_name) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowS3CICDAccess"
+      effect = "Allow"
+
+      actions = [
+        "s3:Get*",
+        "s3:Head*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject*",
+      ]
+
+      resources = [
+        "arn:aws:s3:::${var.cicd_artifacts_bucket_name}",
+        "arn:aws:s3:::${var.cicd_artifacts_bucket_name}/*",
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = length(var.state_bucket_name) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowS3StateAccess"
+      effect = "Allow"
+
+      actions = [
+        "s3:Get*",
+        "s3:Head*",
+        "s3:List*",
+        "s3:DeleteObject*",
+        "s3:PutObject*",
+      ]
+
+      resources = [
+        "arn:aws:s3:::${var.state_bucket_name}",
+        "arn:aws:s3:::${var.state_bucket_name}/*",
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = length(var.cicd_artifacts_bucket_key_arn) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowKMSCICD"
+      effect = "Allow"
+
+      actions = [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:GetKeyPolicy",
+        "kms:GetKeyRotationStatus",
+        "kms:ListGrants",
+        "kms:ListResourceTags",
+        "kms:ReEncrypt*",
+      ]
+
+      resources = [
+        var.cicd_artifacts_bucket_key_arn,
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = length(var.state_bucket_key_arn) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowKMSState"
+      effect = "Allow"
+
+      actions = [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:GetKeyPolicy",
+        "kms:GetKeyRotationStatus",
+        "kms:ListGrants",
+        "kms:ListResourceTags",
+        "kms:ReEncrypt*",
+      ]
+
+      resources = [
+        var.state_bucket_key_arn,
+      ]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = length(var.state_lock_table_arn) > 0 ? ["1"] : []
+    content {
+      sid    = "AllowDynamoDBStateLock"
+      effect = "Allow"
+
+      actions = [
+        "dynamodb:UpdateItem",
+        "dynamodb:PutItem",
+        "dynamodb:GetItem",
+        "dynamodb:DeleteItem"
+      ]
+
+      resources = [
+        var.state_lock_table_arn,
+      ]
+    }
   }
 }

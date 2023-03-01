@@ -22,6 +22,9 @@ github_organization_url                          = "https://github.com/bjsscloud
 github_repository_name                           = "bjss-careers-aws-dev"
 region                                           = var.region
 runner_account_id                                = var.aws_account_id
+state_bucket_name                                = data.terraform_remote_state.bootstrap.outputs.state_bucket_name
+state_bucket_key_arn                             = data.terraform_remote_state.bootstrap.outputs.state_bucket_key
+state_lock_table_arn                             = data.terraform_remote_state.bootstrap.outputs.state_lock_table_arn
 unique_prefix                                    = "${local.prefix}-simple"
 }
 ```
@@ -50,6 +53,11 @@ github_repository_name       = "bjss-careers-aws-dev"
 
 region            = var.region
 runner_account_id = var.aws_account_id
+
+state_bucket_name    = data.terraform_remote_state.bootstrap.outputs.state_bucket_name
+state_bucket_key_arn = data.terraform_remote_state.bootstrap.outputs.state_bucket_key
+state_lock_table_arn = data.terraform_remote_state.bootstrap.outputs.state_lock_table_arn
+
 unique_prefix     = "${local.prefix}-mid"
 }
 
@@ -108,6 +116,11 @@ local.identifiers.account_admin_role_arn,
 permission_boundary_arn = aws_iam_policy.permissions_boundary.arn
 region                  = var.region
 runner_account_id       = var.aws_account_id
+
+state_bucket_name    = data.terraform_remote_state.bootstrap.outputs.state_bucket_name
+state_bucket_key_arn = data.terraform_remote_state.bootstrap.outputs.state_bucket_key
+state_lock_table_arn = data.terraform_remote_state.bootstrap.outputs.state_lock_table_arn
+
 unique_prefix           = local.prefix
 }
 
@@ -117,8 +130,8 @@ unique_prefix           = local.prefix
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_cicd_artifacts_bucket_key_arn"></a> [cicd\_artifacts\_bucket\_key\_arn](#input\_cicd\_artifacts\_bucket\_key\_arn) | Encryption key ARN for the bucket that stores all CICD artifacts for the pipeline(s) | `string` | `""` | no |
-| <a name="input_cicd_artifacts_bucket_name"></a> [cicd\_artifacts\_bucket\_name](#input\_cicd\_artifacts\_bucket\_name) | Bucket that stores all CICD artifacts for the pipeline(s) | `string` | `""` | no |
+| <a name="input_cicd_artifacts_bucket_key_arn"></a> [cicd\_artifacts\_bucket\_key\_arn](#input\_cicd\_artifacts\_bucket\_key\_arn) | Encryption key ARN for the bucket that stores all CICD artifacts for the pipeline(s). The runner will be granted permission to encrypt/decrypt using this key | `string` | `""` | no |
+| <a name="input_cicd_artifacts_bucket_name"></a> [cicd\_artifacts\_bucket\_name](#input\_cicd\_artifacts\_bucket\_name) | Bucket that stores all CICD artifacts for the pipeline(s). The runner will be granted permission to read/write contents of this bucket | `string` | `""` | no |
 | <a name="input_cloudwatch_metric_cloud_init_failure_name"></a> [cloudwatch\_metric\_cloud\_init\_failure\_name](#input\_cloudwatch\_metric\_cloud\_init\_failure\_name) | The name to give the metric that tracks Cloud Init failures on GitHub Runner EC2 instances. Defaults to CloudInitFailureCount | `string` | `"CloudInitFailureCount"` | no |
 | <a name="input_cloudwatch_metric_github_runner_failure_name"></a> [cloudwatch\_metric\_github\_runner\_failure\_name](#input\_cloudwatch\_metric\_github\_runner\_failure\_name) | The name to give the metric that tracks GitHub Connectivity failures on GitHub Runner EC2 instances. Defaults to GithubRunnerFailureCount | `string` | `"GithubRunnerFailureCount"` | no |
 | <a name="input_ec2_associate_public_ip_address"></a> [ec2\_associate\_public\_ip\_address](#input\_ec2\_associate\_public\_ip\_address) | Should all runner instances have public IP addresses attached (required only if you're deploying into a public subnet) | `bool` | `false` | no |
@@ -127,7 +140,7 @@ unique_prefix           = local.prefix
 | <a name="input_ec2_autoscaling_minimum_instances"></a> [ec2\_autoscaling\_minimum\_instances](#input\_ec2\_autoscaling\_minimum\_instances) | Minimum number of instances in the autoscaling group of github Runners | `number` | `0` | no |
 | <a name="input_ec2_dynamic_scaling_enabled"></a> [ec2\_dynamic\_scaling\_enabled](#input\_ec2\_dynamic\_scaling\_enabled) | Controls whether GitHub runners dynamically scale up/down depending on how busy the server is | `bool` | `false` | no |
 | <a name="input_ec2_dynamic_scaling_metric_collection_cron_expression"></a> [ec2\_dynamic\_scaling\_metric\_collection\_cron\_expression](#input\_ec2\_dynamic\_scaling\_metric\_collection\_cron\_expression) | Cron expression that dictates how often to run the cron expression that gathers github runner utilisation metrics. Default is every minute between 0700-1959 Monday-Friday UTC (0800-2059 during BST) | `string` | `"0/1 07-19 ? * MON-FRI *"` | no |
-| <a name="input_ec2_extra_security_groups"></a> [ec2\_extra\_security\_groups](#input\_ec2\_extra\_security\_groups) | List of security group IDs to append to the EC2 instances for running GitHub jobs. Defaults to an empty list | `list(string)` | `[]` | no |
+| <a name="input_ec2_extra_security_groups"></a> [ec2\_extra\_security\_groups](#input\_ec2\_extra\_security\_groups) | List of additional security group IDs to append to the EC2 instances for running GitHub jobs. Defaults to an empty list. All runners will be allowed unrestricted egress traffic on ports 80, 443 and ICMP as standard | `list(string)` | `[]` | no |
 | <a name="input_ec2_github_runner_name"></a> [ec2\_github\_runner\_name](#input\_ec2\_github\_runner\_name) | Name by which the github Server will know this runner | `string` | `"default"` | no |
 | <a name="input_ec2_github_runner_tag_list"></a> [ec2\_github\_runner\_tag\_list](#input\_ec2\_github\_runner\_tag\_list) | Comma-delimited list of tags that can be used to target this runner | `string` | `"default"` | no |
 | <a name="input_ec2_iam_role_extra_policy_attachments"></a> [ec2\_iam\_role\_extra\_policy\_attachments](#input\_ec2\_iam\_role\_extra\_policy\_attachments) | List of policy ARNs to append to the runner's EC2 Instance Profile. Use this to give your runner permission to deploy things in your accounts. | `list(string)` | `[]` | no |
@@ -139,10 +152,10 @@ unique_prefix           = local.prefix
 | <a name="input_ec2_nightly_shutdown_scale_out_time"></a> [ec2\_nightly\_shutdown\_scale\_out\_time](#input\_ec2\_nightly\_shutdown\_scale\_out\_time) | time to scale out | `string` | `"0 6 * * 1-5"` | no |
 | <a name="input_ec2_root_volume_size"></a> [ec2\_root\_volume\_size](#input\_ec2\_root\_volume\_size) | Size of root volume for the EC2 instances for running GitHub jobs. Defaults to 100GiB | `number` | `100` | no |
 | <a name="input_ec2_runner_role_tag"></a> [ec2\_runner\_role\_tag](#input\_ec2\_runner\_role\_tag) | Adds a new Role tag to each runner with this value, to indicate the functional role performed by particular group of runners | `string` | `"general"` | no |
-| <a name="input_ec2_spot_instances_max_price"></a> [ec2\_spot\_instances\_max\_price](#input\_ec2\_spot\_instances\_max\_price) | max spot price for github runners | `string` | `"0.3"` | no |
-| <a name="input_ec2_spot_instances_preferred"></a> [ec2\_spot\_instances\_preferred](#input\_ec2\_spot\_instances\_preferred) | run github runners as spot instances | `bool` | `false` | no |
+| <a name="input_ec2_spot_instances_max_price"></a> [ec2\_spot\_instances\_max\_price](#input\_ec2\_spot\_instances\_max\_price) | Specifies the maximum spot price to pay for github runners. Only applies if ec2\_spot\_instances\_preferred is true | `string` | `"0.5"` | no |
+| <a name="input_ec2_spot_instances_preferred"></a> [ec2\_spot\_instances\_preferred](#input\_ec2\_spot\_instances\_preferred) | Set to true in order to run github runners as spot instances. Defaults to false. | `bool` | `false` | no |
 | <a name="input_ec2_subnet_ids"></a> [ec2\_subnet\_ids](#input\_ec2\_subnet\_ids) | List of IDs of the subnets used to host the EC2 instances for running GitHub jobs | `list(string)` | n/a | yes |
-| <a name="input_ec2_terraform_deployment_roles"></a> [ec2\_terraform\_deployment\_roles](#input\_ec2\_terraform\_deployment\_roles) | List of deployment role ARNs that can be assumed by the runner in order to execute Terraform commands | `list(string)` | `[]` | no |
+| <a name="input_ec2_terraform_deployment_roles"></a> [ec2\_terraform\_deployment\_roles](#input\_ec2\_terraform\_deployment\_roles) | List of deployment role ARNs that can be assumed by the runner in order to execute Terraform commands. The runner will be granted permission to assume these roles | `list(string)` | `[]` | no |
 | <a name="input_ec2_vpc_id"></a> [ec2\_vpc\_id](#input\_ec2\_vpc\_id) | ID of the VPC used to host the EC2 instances for running GitHub jobs | `string` | n/a | yes |
 | <a name="input_github_job_image_ecr_account"></a> [github\_job\_image\_ecr\_account](#input\_github\_job\_image\_ecr\_account) | Account ID containing the ECR Docker Registry that hosts the images used for GitHub Actions jobs. Used so that the runner can proactively log into that registry. Default is empty (i.e. no docker images required) | `string` | `""` | no |
 | <a name="input_github_organization_url"></a> [github\_organization\_url](#input\_github\_organization\_url) | The full https URL of the GitHub Organization or Owner, not including project name | `string` | n/a | yes |
@@ -154,6 +167,9 @@ unique_prefix           = local.prefix
 | <a name="input_region"></a> [region](#input\_region) | The AWS region in which to create resources | `string` | n/a | yes |
 | <a name="input_resource_tags"></a> [resource\_tags](#input\_resource\_tags) | Map of tags to be applied to all resources. Don't include provider tags in here or it will cause continual re-plans of tagged resources | `map(string)` | `{}` | no |
 | <a name="input_runner_account_id"></a> [runner\_account\_id](#input\_runner\_account\_id) | The AWS account ID that should host the GitHub Runners | `string` | n/a | yes |
+| <a name="input_state_bucket_key_arn"></a> [state\_bucket\_key\_arn](#input\_state\_bucket\_key\_arn) | Encryption key ARN for the bucket that stores all Terraform State for the pipeline(s). The runner will be granted permission to encrypt/decrypt using this key | `string` | `""` | no |
+| <a name="input_state_bucket_name"></a> [state\_bucket\_name](#input\_state\_bucket\_name) | Bucket that stores all Terraform State for the pipeline(s). The runner will be granted permission to read/write contents of this bucket | `string` | `""` | no |
+| <a name="input_state_lock_table_arn"></a> [state\_lock\_table\_arn](#input\_state\_lock\_table\_arn) | DynamoDB Table that stores all Terraform State Locks for the pipeline(s). The runner will be granted permission to read/write this table. | `string` | `""` | no |
 | <a name="input_unique_prefix"></a> [unique\_prefix](#input\_unique\_prefix) | This unique prefix will be prepended to all resource names to ensure no clashes with other resources in the same account | `string` | n/a | yes |
 ## Outputs
 
