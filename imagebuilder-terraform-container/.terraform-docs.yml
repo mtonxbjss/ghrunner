@@ -24,7 +24,7 @@ content: |-
   module "imagebuilder_terraform_container" {
     source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-terraform-container"
 
-    container_build_pipeline_cron_expression = "cron(0 4 ? * MON *)"
+    container_build_pipeline_cron_expression = "0 4 ? * MON *"
     container_version_number                 = "1.0.0"
 
     ecr_private_repository_account_id = var.aws_account_id
@@ -52,7 +52,7 @@ content: |-
   module "imagebuilder_terraform_container" {
     source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-terraform-container"
 
-    container_build_pipeline_cron_expression = "cron(0 4 ? * MON *)"
+    container_build_pipeline_cron_expression = "0 4 ? * MON *"
     container_version_number                 = "1.0.0"
 
     ecr_private_repository_account_id = var.aws_account_id

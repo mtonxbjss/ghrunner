@@ -13,7 +13,7 @@ This is an imagebuilder pipeline to generate a GitHub Runner AMI using default v
 module "imagebuilder_github_runner_ami_simple" {
 source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-github-runner-ami"
 
-ami_build_pipeline_cron_expression = "cron(0 4 ? * MON *)"
+ami_build_pipeline_cron_expression = "0 4 ? * MON *"
 ami_version_number                 = "1.0.0"
 
 github_runner_binary_version = "2.299.2"
@@ -42,7 +42,7 @@ This is an imagebuilder pipeline to generate a GitHub Runner AMI overriding defa
 module "imagebuilder_github_runner_ami" {
 source = "git::https://github.com/mtonxbjss/ghrunner.git//imagebuilder-github-runner-ami"
 
-ami_build_pipeline_cron_expression = "cron(0 4 ? * MON *)"
+ami_build_pipeline_cron_expression = "0 4 ? * MON *"
 ami_version_number                 = "1.0.0"
 
 github_job_image_ecr_account_id      = var.aws_account_id
