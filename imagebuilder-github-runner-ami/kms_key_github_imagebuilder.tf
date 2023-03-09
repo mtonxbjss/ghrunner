@@ -60,7 +60,8 @@ data "aws_iam_policy_document" "kms_key_github_imagebuilder" {
       identifiers = flatten([
         ["arn:aws:iam::${var.runner_account_id}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"],
         ["arn:aws:iam::${var.runner_account_id}:root"],
-        [for account in var.ami_sharing_account_id_list : "arn:aws:iam::${account}:root"]
+        [for account in var.ami_sharing_account_id_list : "arn:aws:iam::${account}:root"],
+        [for account in var.ami_sharing_account_id_list : "arn:aws:iam::${account}:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"],
       ])
     }
   }
