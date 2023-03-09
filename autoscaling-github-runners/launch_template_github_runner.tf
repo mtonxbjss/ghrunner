@@ -2,7 +2,7 @@ resource "aws_launch_template" "github_runner" {
   name                                 = "${var.unique_prefix}-${var.ec2_github_runner_name}"
   description                          = "Template for the github runner ${var.ec2_github_runner_name} to be launched in a self-healing ASG"
   update_default_version               = true
-  image_id                             = tolist(data.aws_imagebuilder_image.github_latest.output_resources[0].amis)[0].image
+  image_id                             = local.launch_template_ami_id
   instance_type                        = var.ec2_instance_type
   user_data                            = data.cloudinit_config.github_runner.rendered
   instance_initiated_shutdown_behavior = var.ec2_spot_instances_preferred ? "terminate" : "stop"

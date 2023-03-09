@@ -115,10 +115,21 @@ variable "ec2_iam_role_extra_policy_attachments" {
 
 variable "ec2_imagebuilder_image_arn" {
   type        = string
-  description = "ARN of the AWS ImageBuilder image that results from the GitHub AMI creation pipeline"
+  description = "ARN of the AWS ImageBuilder image that results from the GitHub AMI creation pipeline. If ec2_ami is also supplied, this parameter is used as first preference"
+  default     = ""
   validation {
-    condition     = can(regex("^arn:aws:imagebuilder:[a-z0-9-]+:[0-9]+:.*$", var.ec2_imagebuilder_image_arn))
+    condition     = can(regex("^(arn:aws:imagebuilder:[a-z0-9-]+:[0-9]+:.*)?$", var.ec2_imagebuilder_image_arn))
     error_message = "Invalid Amazon Resource Name. A valid ImageBuilder Image ARN must start with 'arn:aws:imagebuilder', followed by a region, account ID and resource name separated by colons."
+  }
+}
+
+variable "ec2_ami" {
+  type        = string
+  description = "EC2 AMI to use for GitHub Runners. Only has any effect if you do not pass the ec2_imagebuilder_image_arn parameter"
+  default     = ""
+  validation {
+    condition     = can(regex("^(ami-[a-f0-9]+)?$", var.ec2_ami))
+    error_message = "Invalid AMI ID. A valid AMI ID must start with 'ami-', followed by a hexadecimal value, normally 17 characters in length."
   }
 }
 
