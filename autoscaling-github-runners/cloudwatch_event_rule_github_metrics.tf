@@ -1,5 +1,5 @@
 resource "aws_cloudwatch_event_rule" "github_metrics" {
-  count            = var.ec2_dynamic_scaling_enabled ? 1 : 0
+  count               = var.ec2_dynamic_scaling_enabled ? 1 : 0
   name                = "${var.unique_prefix}-${var.ec2_github_runner_name}-github-metrics"
   description         = "Trigger the GitHub metrics Lambda function on a schedule"
   is_enabled          = var.ec2_dynamic_scaling_enabled
@@ -10,7 +10,7 @@ resource "aws_cloudwatch_event_rule" "github_metrics" {
 }
 
 resource "aws_cloudwatch_event_target" "github_metrics" {
-  count            = var.ec2_dynamic_scaling_enabled ? 1 : 0
+  count          = var.ec2_dynamic_scaling_enabled ? 1 : 0
   rule           = aws_cloudwatch_event_rule.github_metrics[0].name
   event_bus_name = "default"
   target_id      = "GitHubMetrics"

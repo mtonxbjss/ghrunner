@@ -1,17 +1,20 @@
 resource "aws_kms_key" "github_imagebuilder" {
+  count                   = var.imagebuilder_ec2_encryption == "CMK" ? 1 : 0
   description             = "CMK for encrypting github Runner Volumes"
   deletion_window_in_days = var.kms_deletion_window_in_days
   enable_key_rotation     = true
-  policy                  = data.aws_iam_policy_document.kms_key_github_imagebuilder.json
+  policy                  = data.aws_iam_policy_document.kms_key_github_imagebuilder[0].json
   tags                    = local.resource_tags
 }
 
 resource "aws_kms_alias" "github_imagebuilder" {
+  count         = var.imagebuilder_ec2_encryption == "CMK" ? 1 : 0
   name          = "alias/${var.unique_prefix}-imgbld-github-ami"
-  target_key_id = aws_kms_key.github_imagebuilder.key_id
+  target_key_id = aws_kms_key.github_imagebuilder[0].key_id
 }
 
 data "aws_iam_policy_document" "kms_key_github_imagebuilder" {
+  count = var.imagebuilder_ec2_encryption == "CMK" ? 1 : 0
   statement {
     sid    = "AllowLocalIAMAdministration"
     effect = "Allow"

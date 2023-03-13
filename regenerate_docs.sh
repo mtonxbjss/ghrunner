@@ -6,4 +6,4 @@ terraform-docs markdown table --output-file README.md imagebuilder-terraform-con
 terraform-docs markdown table --output-file README.md imagebuilder-github-runner-ami
 terraform-docs markdown table --output-file README.md autoscaling-github-runners
 
-
+terraform fmt --recursive .

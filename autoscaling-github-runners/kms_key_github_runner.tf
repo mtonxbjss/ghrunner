@@ -34,7 +34,7 @@ data "aws_iam_policy_document" "kms_key_github_runner" {
     ]
     principals {
       type        = "AWS"
-      identifiers = length(var.iam_roles_with_admin_access_to_created_resources) > 0 ? var.iam_roles_with_admin_access_to_created_resources : [ "arn:aws:iam::${var.runner_account_id}:root" ]
+      identifiers = length(var.iam_roles_with_admin_access_to_created_resources) > 0 ? var.iam_roles_with_admin_access_to_created_resources : ["arn:aws:iam::${var.runner_account_id}:root"]
     }
   }
 

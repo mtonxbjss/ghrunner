@@ -18,7 +18,7 @@ resource "aws_imagebuilder_component" "github" {
     each.key
     ),
     {
-      REGION                    = var.region
+      REGION = var.region
     }
   )
 }

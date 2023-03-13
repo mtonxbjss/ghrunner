@@ -99,7 +99,7 @@ data "aws_iam_policy_document" "github_image_builder" {
       "kms:Decrypt",
     ]
     resources = flatten([
-      [aws_kms_key.github_imagebuilder.arn],
+      var.imagebuilder_ec2_encryption == "CMK" ? [aws_kms_key.github_imagebuilder[0].arn] : [],
       [data.aws_kms_key.aws_ebs.arn],
       length(var.imagebuilder_log_bucket_encryption_key_arn) == 0 ? [] : [var.imagebuilder_log_bucket_encryption_key_arn],
       length(var.github_runner_binary_bucket_encryption_key_arn) == 0 ? [] : [var.github_runner_binary_bucket_encryption_key_arn],
@@ -122,7 +122,7 @@ data "aws_iam_policy_document" "github_image_builder" {
       "kms:ReEncrypt*",
     ]
     resources = flatten([
-      [aws_kms_key.github_imagebuilder.arn],
+      var.imagebuilder_ec2_encryption == "CMK" ? [aws_kms_key.github_imagebuilder[0].arn] : [],
       [data.aws_kms_key.aws_ebs.arn],
       length(var.imagebuilder_log_bucket_encryption_key_arn) == 0 ? [] : [var.imagebuilder_log_bucket_encryption_key_arn],
       length(var.github_runner_binary_bucket_encryption_key_arn) == 0 ? [] : [var.github_runner_binary_bucket_encryption_key_arn],

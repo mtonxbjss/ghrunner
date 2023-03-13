@@ -6,6 +6,24 @@ Before deploying this module you must:
 * Have a VPC with at least one subnet. The Subnets can be private or public, but they must have access to the Internet via IGW or NAT
 * An S3 bucket in which to hold logs from the image building process, and (optionally) an encryption key for that bucket in KMS
 
+### Note on re-using AMIs in different AWS accounts
+If you intend on reusing your GitHub Runner AMI in Auto Scaling Group in an account other than the one in which the AMI was built, bear in mind that:
+- you cannot share a default aws/ebs key between accounts, so don't specify `imagebuilder_ec2_encryption = "AWS"`
+- you cannot build an AMI with no encryption if you have the [account-wide setting](https://eu-west-2.console.aws.amazon.com/ec2/home?region=eu-west-2#Settings:tab=ebsEncryption) turned on to always encrypt new EBS volumes
+- you cannot reuse a KMS CMK from a different account unless the `AWSServiceRoleForAutoScaling` role has the rights to use it
+- by default the `AWSServiceRoleForAutoScaling` does not have any permissions for any KMS keys
+- you cannot modify the permissions of `AWSServiceRoleForAutoScaling`
+- you can use the AWS CLI command `aws kms create-grant` to grant permission on the key to the `AWSServiceRoleForAutoScaling` role
+- yes it's rubbish, no there's no other way
+
+AWS Support Page on this exact issue:
+https://aws.amazon.com/premiumsupport/knowledge-center/kms-launch-ec2-instance/
+
+The CLI command, for convenience:
+```
+$ aws kms create-grant --key-id arn:aws:kms:us-west-2:444455556666:key/1a2b3c4d-5e6f-1a2b-3c4d-5e6f1a2b3c4d --grantee-principal arn:aws:iam::111122223333:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling --operations Decrypt GenerateDataKeyWithoutPlaintext ReEncryptFrom ReEncryptTo CreateGrant
+```
+
 ### Simplest Possible Example
 This is an imagebuilder pipeline to generate a GitHub Runner AMI using default values for everything.
 
@@ -49,15 +67,15 @@ github_job_image_ecr_account_id      = var.aws_account_id
 github_job_image_ecr_repository_name = aws_ecr_repository.terraform.name
 github_runner_binary_version         = "2.299.2"
 
-imagebuilder_ec2_instance_type        = "t3a.large"
-imagebuilder_ec2_root_volume_size     = 100
-imagebuilder_ec2_subnet_id            = module.vpc.private_subnets[0]
-imagebuilder_ec2_terminate_on_failure = false
-imagebuilder_ec2_vpc_id               = module.vpc.vpc_id
-
-imagebuilder_log_bucket_encryption_key_arn = aws_kms_key.cicd.arn
-imagebuilder_log_bucket_name               = aws_s3_bucket.cicd.bucket
-imagebuilder_log_bucket_path               = "github-runner/ami-logs/github"
+imagebuilder_ec2_encryption                 = "CMK"
+imagebuilder_ec2_instance_type              = "t3a.large"
+imagebuilder_ec2_root_volume_size           = 100
+imagebuilder_ec2_subnet_id                  = module.vpc.private_subnets[0]
+imagebuilder_ec2_terminate_on_failure       = false
+imagebuilder_ec2_vpc_id                     = module.vpc.vpc_id
+imagebuilder_log_bucket_encryption_key_arn  = aws_kms_key.cicd.arn
+imagebuilder_log_bucket_name                = aws_s3_bucket.cicd.bucket
+imagebuilder_log_bucket_path                = "github-runner/ami-logs/github"
 
 iam_roles_with_admin_access_to_created_resources = [
 local.identifiers.app_deployer_role_arn,
@@ -133,4 +151,5 @@ unique_prefix           = local.prefix
 | [aws_iam_policy_document.github_image_builder](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.github_image_builder_assumerole](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.kms_key_github_imagebuilder](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_kms_key.aws_ebs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/kms_key) | data source |
 <!-- END_TF_DOCS -->
