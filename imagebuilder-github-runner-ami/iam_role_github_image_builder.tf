@@ -100,6 +100,7 @@ data "aws_iam_policy_document" "github_image_builder" {
     ]
     resources = flatten([
       [aws_kms_key.github_imagebuilder.arn],
+      [data.aws_kms_key.aws_ebs.arn],
       length(var.imagebuilder_log_bucket_encryption_key_arn) == 0 ? [] : [var.imagebuilder_log_bucket_encryption_key_arn],
       length(var.github_runner_binary_bucket_encryption_key_arn) == 0 ? [] : [var.github_runner_binary_bucket_encryption_key_arn],
     ])
@@ -122,6 +123,7 @@ data "aws_iam_policy_document" "github_image_builder" {
     ]
     resources = flatten([
       [aws_kms_key.github_imagebuilder.arn],
+      [data.aws_kms_key.aws_ebs.arn],
       length(var.imagebuilder_log_bucket_encryption_key_arn) == 0 ? [] : [var.imagebuilder_log_bucket_encryption_key_arn],
       length(var.github_runner_binary_bucket_encryption_key_arn) == 0 ? [] : [var.github_runner_binary_bucket_encryption_key_arn],
     ])
@@ -162,7 +164,7 @@ data "aws_iam_policy_document" "github_image_builder" {
   }
 
   dynamic "statement" {
-    for_each = length(var.github_job_image_ecr_account_id) == 0  && length(var.github_job_image_ecr_repository_name) == 0 ? toset([]) : toset([1])
+    for_each = length(var.github_job_image_ecr_account_id) == 0 && length(var.github_job_image_ecr_repository_name) == 0 ? toset([]) : toset([1])
     content {
       sid    = "AllowEcrPull"
       effect = "Allow"

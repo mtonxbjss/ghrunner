@@ -42,7 +42,6 @@ data "aws_iam_policy_document" "kms_key_github_imagebuilder" {
     sid    = "AllowManagedAccountsToUse"
     effect = "Allow"
     actions = [
-      "kms:CreateGrant",
       "kms:Decrypt",
       "kms:DescribeKey",
       "kms:Encrypt",

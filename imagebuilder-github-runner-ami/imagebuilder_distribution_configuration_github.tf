@@ -6,7 +6,7 @@ resource "aws_imagebuilder_distribution_configuration" "github" {
     ami_distribution_configuration {
       name       = "${var.unique_prefix}-{{ imagebuilder:buildDate }}"
       ami_tags   = local.resource_tags
-      kms_key_id = aws_kms_key.github_imagebuilder.arn
+      kms_key_id = var.imagebuilder_ec2_encryption == "CMK" ? aws_kms_key.github_imagebuilder.arn : var.imagebuilder_ec2_encryption == "AWS" ? data.aws_kms_key.aws_ebs.arn : null
 
       launch_permission {
         user_ids = flatten([

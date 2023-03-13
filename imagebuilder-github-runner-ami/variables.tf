@@ -80,6 +80,16 @@ variable "iam_roles_with_admin_access_to_created_resources" {
   }
 }
 
+variable "imagebuilder_ec2_encryption" {
+  type        = string
+  description = "Type of encryption to use for the resulting GitHub AMI (AWS, CMK, None)"
+  default     = "None"
+  validation {
+    condition     = can(regex("^(AWS|CMK|None)$", var.imagebuilder_ec2_encryption))
+    error_message = "Invalid AMI encryption type. Must be either AWS, CMK or None"
+  }
+}
+
 variable "imagebuilder_ec2_extra_security_groups" {
   type        = list(string)
   description = "List of security group IDs to append to the temporary EC2 instance that will be created in order to generate the AMI. Defaults to an empty list"

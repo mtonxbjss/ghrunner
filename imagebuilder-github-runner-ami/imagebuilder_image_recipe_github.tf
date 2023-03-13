@@ -8,8 +8,8 @@ resource "aws_imagebuilder_image_recipe" "github" {
     device_name = "/dev/sda1"
     ebs {
       delete_on_termination = true
-      encrypted             = true
-      kms_key_id            = aws_kms_key.github_imagebuilder.arn
+      encrypted             = contains(["AWS", "CMK"], var.imagebuilder_ec2_encryption) ? true : false
+      kms_key_id            = var.imagebuilder_ec2_encryption == "CMK" ? aws_kms_key.github_imagebuilder.arn : var.imagebuilder_ec2_encryption == "AWS" ? data.aws_kms_key.aws_ebs.arn : null
       volume_size           = var.imagebuilder_ec2_root_volume_size
       volume_type           = "gp2"
     }
