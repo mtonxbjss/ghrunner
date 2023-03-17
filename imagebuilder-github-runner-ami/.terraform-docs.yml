@@ -75,9 +75,9 @@ content: |-
     ami_build_pipeline_cron_expression = "0 4 ? * MON *"
     ami_version_number                 = "1.0.0"
 
-    github_job_image_ecr_account_id      = var.aws_account_id
-    github_job_image_ecr_repository_name = aws_ecr_repository.terraform.name
-    github_runner_binary_version         = "2.299.2"
+    github_job_image_ecr_account_id       = var.aws_account_id
+    github_job_image_ecr_repository_names = [ aws_ecr_repository.terraform.name ]
+    github_runner_binary_version          = "2.299.2"
 
     imagebuilder_ec2_encryption                 = "CMK"
     imagebuilder_ec2_instance_type              = "t3a.large"

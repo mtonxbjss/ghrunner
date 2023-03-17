@@ -30,10 +30,10 @@ variable "github_job_image_ecr_account_id" {
   }
 }
 
-variable "github_job_image_ecr_repository_name" {
-  type        = string
-  description = "The name of the ECR repository for job docker images. Defaults to empty (i.e. no private repository required)"
-  default     = ""
+variable "github_job_image_ecr_repository_names" {
+  type        = list(string)
+  description = "A list of names of ECR repositories for job docker images. Defaults to empty (i.e. no private repository required). Latest images from each of these repos will be downloaded and cached whilst making the AMI to allow faster running of jobs"
+  default     = []
 }
 
 variable "github_runner_binary_bucket_encryption_key_arn" {
