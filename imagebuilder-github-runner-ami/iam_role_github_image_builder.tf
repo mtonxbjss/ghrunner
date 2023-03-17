@@ -175,7 +175,7 @@ data "aws_iam_policy_document" "github_image_builder" {
       ]
       resources = [
         for reponame in var.github_job_image_ecr_repository_names :
-        "arn:aws:ecr:${var.region}:${var.github_job_image_ecr_account_id}:repository/${reponame}"
+        "arn:aws:ecr:${var.region}:${var.github_job_image_ecr_account_id}:repository/${split(":", reponame)[0]}"
       ]
     }
   }

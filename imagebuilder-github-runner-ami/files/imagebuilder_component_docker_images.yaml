@@ -18,7 +18,7 @@ phases:
           commands:
             - |
               for reponame in ${DOCKER_REPO_NAMES}; do
-                docker pull ${DOCKER_REGISTRY_ID}/$${reponame}:latest
+                docker pull ${DOCKER_REGISTRY_ID}/$${reponame}
               done
   - name: validate
     steps:
@@ -41,11 +41,11 @@ phases:
           commands:
             - |
               for reponame in ${DOCKER_REPO_NAMES}; do
-                IMAGE_ID=$(docker images --quiet ${DOCKER_REGISTRY_ID}/$${reponame}:latest)
+                IMAGE_ID=$(docker images --quiet ${DOCKER_REGISTRY_ID}/$${reponame})
                 if [ -n "$${IMAGE_ID}" ]; then
-                  echo "The latest $${reponame} docker image is cached."
+                  echo "The $${reponame} docker image is cached."
                 else
-                  echo "The latest $${reponame} docker image has not been cached. Failing build."
+                  echo "The $${reponame} docker image has not been cached. Failing build."
                   exit {{ validate.Fail.outputs.stdout }}
                 fi
               done
