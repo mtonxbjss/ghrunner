@@ -64,7 +64,7 @@ ami_build_pipeline_cron_expression = "0 4 ? * MON *"
 ami_version_number                 = "1.0.0"
 
 github_job_image_ecr_account_id       = var.aws_account_id
-github_job_image_ecr_repository_names = [ aws_ecr_repository.terraform.name ]
+github_job_image_ecr_repository_names = [ "${aws_ecr_repository.terraform.name}:latest" ]
 github_runner_binary_version          = "2.299.2"
 
 imagebuilder_ec2_encryption                 = "CMK"
@@ -96,7 +96,7 @@ unique_prefix           = local.prefix
 | <a name="input_ami_sharing_account_id_list"></a> [ami\_sharing\_account\_id\_list](#input\_ami\_sharing\_account\_id\_list) | A list of additional AWS account IDs that you want to share your completed AMI with. Does not need to include the account in which the AMI is built as this is included by default | `list(string)` | `[]` | no |
 | <a name="input_ami_version_number"></a> [ami\_version\_number](#input\_ami\_version\_number) | Sematic versioning version number of the AMI to be created. Defaults to 1.0.0 | `string` | `"1.0.0"` | no |
 | <a name="input_github_job_image_ecr_account_id"></a> [github\_job\_image\_ecr\_account\_id](#input\_github\_job\_image\_ecr\_account\_id) | The AWS account ID that hosts the private ECR registry for job docker images. Defaults to empty (i.e. no private repository required) | `string` | `""` | no |
-| <a name="input_github_job_image_ecr_repository_names"></a> [github\_job\_image\_ecr\_repository\_names](#input\_github\_job\_image\_ecr\_repository\_names) | A list of names of ECR repositories for job docker images. Defaults to empty (i.e. no private repository required). Latest images from each of these repos will be downloaded and cached whilst making the AMI to allow faster running of jobs | `list(string)` | `[]` | no |
+| <a name="input_github_job_image_ecr_repository_names"></a> [github\_job\_image\_ecr\_repository\_names](#input\_github\_job\_image\_ecr\_repository\_names) | A list of names of ECR repositories for job docker images. Include the version to pull after a colon. Defaults to empty (i.e. no private repository required). Latest images from each of these repos will be downloaded and cached whilst making the AMI to allow faster running of jobs | `list(string)` | `[]` | no |
 | <a name="input_github_runner_binary_bucket_encryption_key_arn"></a> [github\_runner\_binary\_bucket\_encryption\_key\_arn](#input\_github\_runner\_binary\_bucket\_encryption\_key\_arn) | Encryption key ARN for the bucket that stores the version of the GitHub Runner binary that you want to use. Defaults to empty (i.e. no encryption) | `string` | `""` | no |
 | <a name="input_github_runner_binary_bucket_name"></a> [github\_runner\_binary\_bucket\_name](#input\_github\_runner\_binary\_bucket\_name) | Bucket that stores the version of the GitHub Runner binary that you want to use | `string` | `""` | no |
 | <a name="input_github_runner_binary_bucket_path"></a> [github\_runner\_binary\_bucket\_path](#input\_github\_runner\_binary\_bucket\_path) | Bucket path that stores the version of the GitHub Runner binary that you want to use | `string` | `""` | no |

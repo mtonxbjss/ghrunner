@@ -32,8 +32,15 @@ variable "github_job_image_ecr_account_id" {
 
 variable "github_job_image_ecr_repository_names" {
   type        = list(string)
-  description = "A list of names of ECR repositories for job docker images. Defaults to empty (i.e. no private repository required). Latest images from each of these repos will be downloaded and cached whilst making the AMI to allow faster running of jobs"
+  description = "A list of names of ECR repositories for job docker images. Include the version to pull after a colon. Defaults to empty (i.e. no private repository required). Latest images from each of these repos will be downloaded and cached whilst making the AMI to allow faster running of jobs"
   default     = []
+  validation {
+    condition = length([
+      for repo in var.github_job_image_ecr_repository_names :
+      true if can(regex("^.*:.*$", repo))
+    ]) == length(var.github_job_image_ecr_repository_names)
+    error_message = "Invalid repository name and version tag. A valid entry must be the name of the repo followed by a colon and the name of the version, e.g. 'myrepo:latest'"
+  }
 }
 
 variable "github_runner_binary_bucket_encryption_key_arn" {
