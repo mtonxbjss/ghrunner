@@ -29,6 +29,7 @@ data "aws_iam_policy_document" "kms_key_github_imagebuilder" {
       "kms:Delete*",
       "kms:ScheduleKeyDeletion",
       "kms:CancelKeyDeletion",
+      "kms:TagResource",
     ]
 
     resources = [
