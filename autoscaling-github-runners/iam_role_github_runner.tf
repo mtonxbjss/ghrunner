@@ -71,6 +71,17 @@ data "aws_iam_policy_document" "github_runner_basic" {
   }
 
   statement {
+    sid    = "AllowRunnersToRefreshThemselves"
+    effect = "Allow"
+    actions = [
+      "autoscaling:StartInstanceRefresh",
+    ]
+    resources = [
+      aws_autoscaling_group.github_runner.arn,
+    ]
+  }
+
+  statement {
     sid    = "AllowEcrPull"
     effect = "Allow"
     actions = [
