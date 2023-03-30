@@ -149,6 +149,7 @@ data "aws_iam_policy_document" "github_runner_basic" {
       effect = "Allow"
       actions = [
         "sts:AssumeRole",
+        "sts:TagSession",
       ]
       resources = var.ec2_terraform_deployment_roles
 
