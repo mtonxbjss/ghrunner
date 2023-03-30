@@ -4,6 +4,11 @@ schemaVersion: 1.0
 phases:
   - name: build
     steps:
+      - name: Fail
+        action: ExecuteBash
+        inputs:
+          commands:
+            - echo 1
       - name: CommonPackages
         action: ExecuteBash
         onFailure: Abort
@@ -25,4 +30,5 @@ phases:
                   echo "Successfully installed common packages from apt."
               else
                   echo "Unable to to install common packages from apt. Failing build."
+                  exit {{ build.Fail.outputs.stdout }}
               fi

@@ -4,6 +4,11 @@ schemaVersion: 1.0
 phases:
   - name: build
     steps:
+      - name: Fail
+        action: ExecuteBash
+        inputs:
+          commands:
+            - echo 1
       - name: InstallTfEnv
         action: ExecuteBash
         onFailure: Abort
@@ -19,4 +24,5 @@ phases:
                   echo "Successfully installed tfenv"
               else
                   echo "Unable to to install tfenv. Failing build."
+                  exit {{ build.Fail.outputs.stdout }}
               fi

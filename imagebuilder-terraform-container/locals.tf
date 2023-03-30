@@ -1,7 +1,8 @@
 locals {
   imagebuilder_components = toset([
     "common_packages",
-    "tfenv"
+    "tfenv",
+    "kubectl"
   ])
 
   resource_tags = merge(

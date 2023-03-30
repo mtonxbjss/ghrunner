@@ -1,0 +1,33 @@
+name: install kubectl
+description: Downloads & installs the kubectl utility to manage kubernetes clusters
+schemaVersion: 1.0
+phases:
+  - name: build
+    steps:
+      - name: Fail
+        action: ExecuteBash
+        inputs:
+          commands:
+            - echo 1
+      - name: InstallKubectl
+        action: ExecuteBash
+        onFailure: Abort
+        inputs:
+          commands:
+            - |
+              SUCCESS_CODE=0
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+              curl -LO "https://dl.k8s.io/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl.sha256"
+              echo "$(cat kubectl.sha256)  kubectl" | sha256sum --check
+              if [[ $? == $SUCCESS_CODE ]]; then
+                install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+                if [[ $? == $SUCCESS_CODE ]]; then
+                    echo "Successfully installed kubectl"
+                else
+                    echo "Unable to to install kubectl. Failing build."
+                    exit {{ build.Fail.outputs.stdout }}
+                fi
+              else
+                echo "Downloaded kubectl file did not match checksum. Failing build."
+                exit {{ build.Fail.outputs.stdout }}
+              fi
