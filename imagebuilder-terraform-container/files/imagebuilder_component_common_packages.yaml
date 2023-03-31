@@ -17,6 +17,7 @@ phases:
             - |
               SUCCESS_CODE=0
               apt-get update
+              apt-get upgrade -y
               apt-get install -y \
                 curl \
                 git \
