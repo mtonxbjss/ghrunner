@@ -248,9 +248,9 @@ variable "github_organization_url" {
   }
 }
 
-variable "github_repository_name" {
-  type        = string
-  description = "The name of the GitHub Repository to which these runners should register"
+variable "github_repository_names" {
+  type        = list(string)
+  description = "A list of names of GitHub Repositories to which these runners should register. They must all be in the same organization or domain"
 }
 
 variable "iam_roles_with_admin_access_to_created_resources" {

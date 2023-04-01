@@ -26,49 +26,55 @@ write_files:
 
       # Get the data required in order to register the runner
       PERSONAL_ACCESS_TOKEN=$(aws --region ${REGION} secretsmanager get-secret-value --secret-id ${PAT_SECRET_NAME} --query 'SecretString' --output text)
-      GITHUB_SERVER_URL=${GITHUB_ORG_URL}/${GITHUB_REPO_NAME}
-      GITHUB_API_URL=$(echo "$${GITHUB_SERVER_URL}" | sed -E 's/github\.com\//api\.github\.com\/repos\//')
-      RUNNER_REGISTRATION_TOKEN=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $${PERSONAL_ACCESS_TOKEN}" "$${GITHUB_API_URL}/actions/runners/registration-token")
-      RUNNER_REGISTRATION_TOKEN_VALUE=$(echo $RUNNER_REGISTRATION_TOKEN | jq -rc .token)
 
-      cd /opt/actions-runner
+      repo_id=0
+      # Register 'n' concurrent runners for each repo in the repo list
+      for GITHUB_SERVER_URL in ${GITHUB_REPO_LIST}; do
+        repo_id=$(($${repo_id}+1))
 
-      # Add all required runner agent instances (based on required concurrency)
-      for RUNNER_ID in $(seq ${CONCURRENT}); do
+        GITHUB_API_URL=$(echo "$${GITHUB_SERVER_URL}" | sed -E 's/github\.com\//api\.github\.com\/repos\//')
+        RUNNER_REGISTRATION_TOKEN=$(curl -X POST -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $${PERSONAL_ACCESS_TOKEN}" "$${GITHUB_API_URL}/actions/runners/registration-token")
+        RUNNER_REGISTRATION_TOKEN_VALUE=$(echo $RUNNER_REGISTRATION_TOKEN | jq -rc .token)
 
-        # Determine this runner's name
-        SERVICE_NAME="runner$${RUNNER_ID}"
+        cd /opt/actions-runner
 
-        # Create the runner's user
-        useradd -b /opt/actions-runner -m $${SERVICE_NAME}
-        usermod -aG docker $${SERVICE_NAME}
-        usermod -s /bin/bash $${SERVICE_NAME}
+        # Add all required runner agent instances (based on required concurrency)
+        for RUNNER_ID in $(seq ${CONCURRENT}); do
 
-        # Unzip the runner binary
-        runuser -l $${SERVICE_NAME} -c 'tar xzf /opt/actions-runner-linux-x64-latest.tar.gz --directory=.'
+          # Determine this runner's name
+          SERVICE_NAME="runner$${repo_id}_$${RUNNER_ID}"
 
-        # Register the runner & start the systemd service
-        cd $${SERVICE_NAME}
-          echo "Configuring service at $(pwd)"
-          runuser -l $${SERVICE_NAME} -c "./config.sh --unattended --name \"$${INSTANCE_ID}-$${SERVICE_NAME}\" --url \"$${GITHUB_SERVER_URL}\" --token \"$${RUNNER_REGISTRATION_TOKEN_VALUE}\" --labels \"${TAG_LIST}\" --replace --pat \"$${PERSONAL_ACCESS_TOKEN}\" --disableupdate"
-          ./svc.sh install $${SERVICE_NAME}
-          ./svc.sh start $${SERVICE_NAME}
-          ./svc.sh status $${SERVICE_NAME}
+          # Create the runner's user
+          useradd -b /opt/actions-runner -m $${SERVICE_NAME}
+          usermod -aG docker $${SERVICE_NAME}
+          usermod -s /bin/bash $${SERVICE_NAME}
 
-          # Set up systemd options to unregister the runner at shutdown
-          if [ -f /opt/actions-runner/$${SERVICE_NAME}/.service ]; then
-            RUNNER_SERVICE_NAME="/etc/systemd/system/$(cat /opt/actions-runner/$${SERVICE_NAME}/.service)"
-            if [ -f $${RUNNER_SERVICE_NAME} ]; then
-              exec_stop="ExecStop=/usr/bin/env bash /usr/bin/github-deregistration.sh $${SERVICE_NAME}\nKillSignal=SIGQUIT\nTimeoutStopSec=3600\n"
-              sed -i "/^ExecStart=.*/a $${exec_stop}" $${RUNNER_SERVICE_NAME}
-              systemctl daemon-reload
+          # Unzip the runner binary
+          runuser -l $${SERVICE_NAME} -c 'tar xzf /opt/actions-runner-linux-x64-latest.tar.gz --directory=.'
+
+          # Register the runner & start the systemd service
+          cd $${SERVICE_NAME}
+            echo "Configuring service at $(pwd)"
+            runuser -l $${SERVICE_NAME} -c "./config.sh --unattended --name \"$${INSTANCE_ID}-$${SERVICE_NAME}\" --url \"$${GITHUB_SERVER_URL}\" --token \"$${RUNNER_REGISTRATION_TOKEN_VALUE}\" --labels \"${TAG_LIST}\" --replace --pat \"$${PERSONAL_ACCESS_TOKEN}\" --disableupdate"
+            ./svc.sh install $${SERVICE_NAME}
+            ./svc.sh start $${SERVICE_NAME}
+            ./svc.sh status $${SERVICE_NAME}
+
+            # Set up systemd options to unregister the runner at shutdown
+            if [ -f /opt/actions-runner/$${SERVICE_NAME}/.service ]; then
+              RUNNER_SERVICE_NAME="/etc/systemd/system/$(cat /opt/actions-runner/$${SERVICE_NAME}/.service)"
+              if [ -f $${RUNNER_SERVICE_NAME} ]; then
+                exec_stop="ExecStop=/usr/bin/env bash /usr/bin/github-deregistration.sh $${SERVICE_NAME}\nKillSignal=SIGQUIT\nTimeoutStopSec=3600\n"
+                sed -i "/^ExecStart=.*/a $${exec_stop}" $${RUNNER_SERVICE_NAME}
+                systemctl daemon-reload
+              else
+                echo "Service couldn't be found ($${RUNNER_SERVICE_NAME})"
+              fi
             else
-              echo "Service couldn't be found ($${RUNNER_SERVICE_NAME})"
+              echo "Service wasn't successfully started, so systemd ExecStop has not been added!"
             fi
-          else
-            echo "Service wasn't successfully started, so systemd ExecStop has not been added!"
-          fi
-        cd ..
+          cd ..
+        done
       done
 
   - path: '/usr/bin/github-deregistration.sh'
@@ -78,13 +84,15 @@ write_files:
       cd /opt/actions-runner
 
       PERSONAL_ACCESS_TOKEN=$(aws --region ${REGION} secretsmanager get-secret-value --secret-id ${PAT_SECRET_NAME} --query 'SecretString' --output text)
-      GITHUB_SERVER_URL=${GITHUB_ORG_URL}/${GITHUB_REPO_NAME}
-      GITHUB_API_URL=$(echo "$${GITHUB_SERVER_URL}" | sed -E 's/github\.com\//api\.github\.com\/repos\//')
-      SERVICE_NAME=$${1:-unknown}
-      RUNNER_ID=$(jq -rc '.agentId' /opt/actions-runner/$${SERVICE_NAME}/.runner)
 
-      # deregister with GitHub
-      curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $${PERSONAL_ACCESS_TOKEN}" "$${GITHUB_API_URL}/actions/runners/$${RUNNER_ID}"
+      for GITHUB_SERVER_URL in ${GITHUB_REPO_LIST}; do
+        GITHUB_API_URL=$(echo "$${GITHUB_SERVER_URL}" | sed -E 's/github\.com\//api\.github\.com\/repos\//')
+        SERVICE_NAME=$${1:-unknown}
+        RUNNER_ID=$(jq -rc '.agentId' /opt/actions-runner/$${SERVICE_NAME}/.runner)
+
+        # deregister with GitHub
+        curl -X DELETE -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $${PERSONAL_ACCESS_TOKEN}" "$${GITHUB_API_URL}/actions/runners/$${RUNNER_ID}"
+      done
 
   - path: '/usr/bin/github-scale-in-protection.sh'
     owner: 'root:root'

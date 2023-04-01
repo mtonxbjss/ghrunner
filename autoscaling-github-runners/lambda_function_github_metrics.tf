@@ -19,8 +19,8 @@ resource "aws_lambda_function" "github_metrics" {
     variables = {
       GITHUB_PAT_SECRET_ARN = aws_secretsmanager_secret.github_pat.arn
       TAG_LIST              = var.ec2_github_runner_tag_list
-      GITHUB_OWNER          = "NHSDigital"
-      GITHUB_REPO_NAMES     = var.github_repository_name
+      GITHUB_OWNER          = split("https://github.com/", var.github_organization_url)[0]
+      GITHUB_REPO_NAMES     = join(",", var.github_repository_names)
       CLOUDWATCH_NAMESPACE  = local.cloudwatch_logs_metric_filters_namespace
     }
   }
