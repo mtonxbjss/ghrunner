@@ -22,6 +22,7 @@ phases:
                 curl \
                 git \
                 jq \
+                pwgen \
                 tree \
                 unzip \
                 vim \
