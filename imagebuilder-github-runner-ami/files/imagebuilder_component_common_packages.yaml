@@ -27,6 +27,7 @@ phases:
                 iputils-ping \
                 jq \
                 lsb-release \
+                pwgen \
                 tree \
                 unzip \
                 vim \
