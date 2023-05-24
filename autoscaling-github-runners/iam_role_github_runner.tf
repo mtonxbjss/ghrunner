@@ -54,8 +54,8 @@ data "aws_iam_policy_document" "github_runner_basic" {
       "logs:PutLogEvents",
     ]
     resources = [
-      "arn:aws:logs:${var.runner_account_id}:log-group:*",
-      "arn:aws:logs:${var.runner_account_id}:log-group:*",
+      "arn:aws:logs:${var.region}:${var.runner_account_id}:log-group:*",
+      "arn:aws:logs:${var.region}:${var.runner_account_id}:log-group:*",
     ]
   }
 
