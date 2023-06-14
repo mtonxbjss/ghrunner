@@ -136,7 +136,7 @@ async function getSecret(name) {
     };
     console.log(`getting PAT token`);
     const smSecretResult = await SM.getSecretValue(param).promise();
-    return `Bearer ${smSecretResult.data.SecretString}`;
+    return `Bearer ${smSecretResult.SecretString}`;
   } catch (smErr) {
     throw new Error(`Failed to retrieve github pat token :: ${smErr}`);
   }
