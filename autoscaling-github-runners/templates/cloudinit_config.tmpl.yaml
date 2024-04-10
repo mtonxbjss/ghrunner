@@ -12,12 +12,9 @@ write_files:
       #!/usr/bin/env bash
       set -ex
 
-      # Connect (and automatically re-connect) to ECR Registry
+      # Install the credential helper
       if [[ -n "${DOCKER_REGISTRY_ID}" ]]; then
-        aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}
-        echo -e "\naws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID}" >> /etc/profile
-        echo "1 */6 * * * aws --region ${REGION} ecr get-login-password | docker login --username AWS --password-stdin ${DOCKER_REGISTRY_ID} >/dev/null 2>&1" | tee -a mycron
-        crontab mycron
+        apt-get -y install amazon-ecr-credential-helper
       fi
 
       # Get the runner EC2 Instance Id
@@ -48,6 +45,12 @@ write_files:
           useradd -b /opt/actions-runner -m $${SERVICE_NAME}
           usermod -aG docker $${SERVICE_NAME}
           usermod -s /bin/bash $${SERVICE_NAME}
+
+          # Connect (and automatically re-connect) to ECR Registry
+          if [[ -n "${DOCKER_REGISTRY_ID}" ]]; then
+            mkdir -p /opt/actions-runner/$${SERVICE_NAME}/.docker
+            sudo echo -e "{\n\t\"credsStore\": \"ecr-login\"\n}" > /opt/actions-runner/$${SERVICE_NAME}/.docker/config.json
+          fi
 
           # Unzip the runner binary
           runuser -l $${SERVICE_NAME} -c 'tar xzf /opt/actions-runner-linux-x64-latest.tar.gz --directory=.'
